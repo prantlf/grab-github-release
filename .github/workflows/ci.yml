@@ -1,0 +1,116 @@
+name: Build and Test or Release
+
+on:
+  push:
+    branches:
+      - master
+    tags-ignore:
+      - '**'
+    paths-ignore:
+      - '**/*.md'
+      - LICENSE
+  pull_request:
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.bump.outputs.bumped }}
+      changed-files: ${{ steps.bump.outputs.changed-files }}
+    steps:
+    - name: Checkout Sources
+      uses: actions/checkout@v4
+    - name: Install PNPM
+      uses: pnpm/action-setup@v2
+      with:
+        version: latest
+    - name: Install Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 'lts/*'
+        cache: 'pnpm'
+    - name: Install Dependencies
+      run: pnpm i --frozen-lockfile --no-verify-store-integrity
+    - name: Build
+      run: npm run build
+    - name: Test
+      run: npm test
+
+  macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout Sources
+      uses: actions/checkout@v4
+    - name: Install PNPM
+      uses: pnpm/action-setup@v2
+      with:
+        version: latest
+    - name: Install Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 'lts/*'
+        cache: 'pnpm'
+    - name: Install Dependencies
+      run: pnpm i --frozen-lockfile --no-verify-store-integrity
+    - name: Build
+      run: npm run build
+    - name: Test
+      run: |
+        npm run test-cover
+        ./test.sh
+    - name: Coverage
+      uses: codecov/codecov-action@v2
+
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Sources
+      uses: actions/checkout@v4
+    - name: Install PNPM
+      uses: pnpm/action-setup@v2
+      with:
+        version: latest
+    - name: Install Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 'lts/*'
+        cache: 'pnpm'
+    - name: Install Dependencies
+      run: pnpm i --frozen-lockfile --no-verify-store-integrity
+    - name: Build
+      run: npm run build
+    - name: Test
+      run: npm test
+
+  release:
+    if: ${{ github.ref_name == 'master' }}
+    needs:
+      - linux
+      - macos
+      - windows
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Sources
+      uses: actions/checkout@v4
+    - name: Install PNPM
+      uses: pnpm/action-setup@v2
+      with:
+        version: latest
+    - name: Install Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 'lts/*'
+        cache: 'pnpm'
+        registry-url: 'https://registry.npmjs.org'
+    - name: Install Dependencies
+      run: pnpm i --frozen-lockfile --no-verify-store-integrity
+    - name: Build
+      run: npm run build
+    - name: Publish
+      uses: cycjimmy/semantic-release-action@v4
+      with:
+        branches: master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
