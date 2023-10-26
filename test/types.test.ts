@@ -17,6 +17,7 @@ test('Type declarations for TypeScript', () => {
       darwin: '',
       win32: ''
     },
+    targetDirectory: '',
     unpackExecutable: true
   })
 })

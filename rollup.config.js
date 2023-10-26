@@ -14,7 +14,7 @@ export default [
         sourcemap: true
       }
     ],
-    external: ['debug', 'fs', 'os', 'semver', 'stream', 'yauzl'],
+    external: ['debug', 'fs', 'os', 'path', 'semver', 'stream', 'yauzl'],
     plugins: [cleanup()]
   }
 ]

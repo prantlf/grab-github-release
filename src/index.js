@@ -1,6 +1,7 @@
 import debug from 'debug'
 import { createWriteStream, promises } from 'fs'
 import { platform, arch } from 'os'
+import { join } from 'path'
 import { clean, satisfies, valid } from 'semver'
 import { Readable } from 'stream'
 import { open as openArchive } from 'yauzl'
@@ -63,7 +64,7 @@ async function download(url, archive) {
   })
 }
 
-function unpack(archive) {
+function unpack(archive, targetDirectory) {
   log('unpack "%s"', archive)
   return new Promise((resolve, reject) =>
     openArchive(archive, { lazyEntries: true }, (err, zip) => {
@@ -74,14 +75,15 @@ function unpack(archive) {
           const { fileName } = entry
           /* c8 ignore next */
           if (fileName.endsWith('/')) return new Error('directory in archive')
-          log('write "%s"', fileName)
+          const filePath = targetDirectory ? join(targetDirectory, fileName) : fileName
+          log('write "%s"', filePath)
           zip.openReadStream(entry, (err, stream) => {
             /* c8 ignore next */
             if (err) return reject(err)
             stream
               .on('error', reject)
-              .pipe(createWriteStream(fileName))
-              .on('finish', () => resolve(fileName))
+              .pipe(createWriteStream(filePath))
+              .on('finish', () => resolve(filePath))
               .on('error', reject)
           })
         })
@@ -99,7 +101,7 @@ async function makeExecutable(executable) {
   }
 }
 
-export default async function grab({ name, repository, version, platformSuffixes, unpackExecutable, verbose }) {
+export default async function grab({ name, repository, version, platformSuffixes, targetDirectory, unpackExecutable, verbose }) {
   if (verbose) log = console.log.bind(console)
   if (!version) version = 'latest'
   const verspec = clean(version) || version
@@ -111,9 +113,10 @@ export default async function grab({ name, repository, version, platformSuffixes
   } else {
     ({ name, version, archive, url } = await getRelease(name, repository, verspec, platformSuffixes))
   }
+  if (targetDirectory) archive = join(targetDirectory, archive)
   await download(url, archive)
   if (unpackExecutable) {
-    const executable = await unpack(archive)
+    const executable = await unpack(archive, targetDirectory)
     await makeExecutable(executable)
     log('remove "%s"', archive)
     await unlink(archive)

@@ -83,6 +83,9 @@ interface GrabOptions {
   // archive name without the platform suffix; if not specified, it will be
   // inferred from the first archive asset found for the current platform
   platformSuffixes?: PlatformSuffixes
+  // directory to write the archive or executable to; if not specified,
+  // files will be written to the current directory
+  targetDirectory?: string
   // unpack the executable and remove the archive
   unpackExecutable?: boolean
 }

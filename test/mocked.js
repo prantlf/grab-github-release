@@ -1,5 +1,5 @@
-import { strictEqual } from 'assert'
-import { access, readFile, rm } from 'fs/promises'
+import { ok, strictEqual } from 'assert'
+import { access, mkdir, readFile, rm } from 'fs/promises'
 import { after, before, beforeEach, test, mock } from 'node:test'
 import { arch, platform } from 'os'
 import { dirname, join } from 'path'
@@ -13,7 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const repository = 'prantlf/v-jsonlint'
 const name = 'jsonlint'
-const executable = platform() != 'win32' ? name : `${name}.exe`
+const executable = join('.', platform() != 'win32' ? name : `${name}.exe`)
 const version = '0.0.6'
 const platformSuffixes = {
   linux: 'linux',
@@ -25,11 +25,15 @@ const content = new Blob(
   [await readFile(join(__dirname, `data/${archive}`))],
   { type: 'applicaiton.zip' }
 )
+const targetDirectory = join(__dirname, 'tmp')
 
-function cleanup() {
-  return Promise.all([
+async function cleanup() {
+  // failed on Windows on GitHub
+  if (platform() == 'win32') return
+  await Promise.all([
     rm(archive, { force: true }),
-    rm(executable, { force: true })
+    rm(executable, { force: true }),
+    rm(targetDirectory, { recursive: true, force: true })
   ])
 }
 
@@ -54,8 +58,7 @@ before(() => {
 beforeEach(cleanup)
 
 after(async () => {
-  // failed on Windows on GitHub
-  if (platform() != 'win32') await cleanup()
+  await cleanup()
   mock.reset()
 })
 
@@ -114,5 +117,13 @@ test('download archive from the latest implicit version and unpack executable', 
   if (!await exists(executable)) throw new Error('executable not found')
   strictEqual(actualVersion, version)
   strictEqual(actualExecutable, executable)
-  strictEqual(actualExecutable, executable)
+})
+
+test('download archive from the latest implicit version and unpack executable to a custom directory', async () => {
+  await mkdir(targetDirectory, { recursive: true })
+  const { executable: actualExecutable, version: actualVersion } = await grab(
+    { name, repository, platformSuffixes, targetDirectory, unpackExecutable: true })
+  if (!await exists(actualExecutable)) throw new Error('executable not found')
+  strictEqual(actualVersion, version)
+  ok(actualExecutable.endsWith(executable))
 })

@@ -24,6 +24,11 @@ interface GrabOptions {
    */
   platformSuffixes?: PlatformSuffixes
   /**
+   * directory to write the archive or executable to; if not specified,
+   * files will be written to the current directory
+   */
+  targetDirectory?: string
+  /**
    * unpack the executable and remove the archive
    */
   unpackExecutable?: boolean

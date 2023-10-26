@@ -12,6 +12,7 @@ Options:
   -i|--version-spec <semver>    semantic version specifier or "latest"
   -n|--name <file-name>         archive name without the platform suffix
   -p|--platform-suffixes <map>  unpack the executable and remove the archive
+  -t|--target-dir <dir-name>    directory to write the output files to
   -e|--unpack-exe               unpack the executable and remove the archive
   -v|--verbose                  prints extra information on the console
   -V|--version                  print version number and exit
@@ -31,7 +32,7 @@ function fail(message) {
 }
 
 const { argv } = process
-let   repository, version, name, platformSuffixes, unpackExecutable, verbose
+let   repository, version, name, platformSuffixes, targetDirectory, unpackExecutable, verbose
 
 for (let i = 2, l = argv.length; i < l; ++i) {
   const arg = argv[i]
@@ -57,6 +58,9 @@ for (let i = 2, l = argv.length; i < l; ++i) {
             const [key, val] = entry.trim().split('=')
             platformSuffixes[key.trim()] = val.trim()
           }
+          return
+        case 't': case 'target-dir':
+          targetDirectory = match[4] || argv[++i]
           return
         case 'e': case 'unpack-exe':
           unpackExecutable = flag
