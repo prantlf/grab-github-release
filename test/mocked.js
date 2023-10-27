@@ -41,6 +41,7 @@ before(() => {
   mock.method(global, 'fetch', url => {
     if (url.endsWith('/releases')) {
       return {
+        ok: true,
         json() {
           return releases
         }
@@ -48,6 +49,7 @@ before(() => {
     }
     if (url.endsWith('.zip')) {
       return {
+        ok: true,
         body: content.stream()
       }
     }

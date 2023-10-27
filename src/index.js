@@ -9,8 +9,9 @@ import { open as openArchive } from 'yauzl'
 let log = debug('grabghr')
 const { chmod, unlink } = promises
 
+/* c8 ignore next 5 */
 function delay() {
-  const delay = (5 + 5 * Math.random()) * 1000
+  const delay = Math.floor((5 + 5 * Math.random()) * 1000)
   log('wait %d ms before trying again', delay)
   return new Promise(resolve => setTimeout(resolve, delay))
 }
@@ -19,7 +20,7 @@ async function retry(action) {
   for (let attempt = 0;;) {
     try {
       return await action()
-      /* c8 ignore next 5 */
+      /* c8 ignore next 7 */
     } catch (err) {
       if (++attempt === 3) throw err
       log('attempt failed: %s', err.message)
@@ -29,9 +30,16 @@ async function retry(action) {
 }
 
 function fetchSafely(url) {
-  return retry(() => {
+  return retry(async () => {
     log('fetch "%s"', url)
-    return fetch(url)
+    const res = await fetch(url)
+    /* c8 ignore next 5 */
+    if (!res.ok) {
+      const err = new Error(`GET "${url}" failed: ${res.status} ${res.statusText}`)
+      err.response = res
+      throw err
+    }
+    return res
   })
 }
 
