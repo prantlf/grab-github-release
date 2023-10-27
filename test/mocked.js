@@ -1,26 +1,25 @@
 import { ok, strictEqual } from 'assert'
 import { access, mkdir, readFile, rm } from 'fs/promises'
 import { after, before, beforeEach, test, mock } from 'node:test'
-import { arch, platform } from 'os'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import grab from 'grab-github-release'
 import releases from './data/releases.json' assert { type: 'json' }
 
 const exists = file => access(file).then(() => true, () => false)
-
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const { platform, arch } = process
 
 const repository = 'prantlf/v-jsonlint'
 const name = 'jsonlint'
-const executable = join('.', platform() != 'win32' ? name : `${name}.exe`)
+const executable = join('.', platform != 'win32' ? name : `${name}.exe`)
 const version = '0.0.6'
 const platformSuffixes = {
   linux: 'linux',
   darwin: 'macos',
   win32: 'windows'
 }
-const archive = `${name}-${platformSuffixes[platform()]}-${arch()}.zip`
+const archive = `${name}-${platformSuffixes[platform]}-${arch}.zip`
 const content = new Blob(
   [await readFile(join(__dirname, `data/${archive}`))],
   { type: 'applicaiton.zip' }
@@ -29,7 +28,7 @@ const targetDirectory = join(__dirname, 'tmp')
 
 async function cleanup() {
   // failed on Windows on GitHub
-  if (platform() == 'win32') return
+  if (platform == 'win32') return
   await Promise.all([
     rm(archive, { force: true }),
     rm(executable, { force: true }),

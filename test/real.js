@@ -1,10 +1,10 @@
 import { strictEqual } from 'assert'
 import { access, rm } from 'fs/promises'
 import { after, before, test } from 'node:test'
-import { arch, platform } from 'os'
 import grab from 'grab-github-release'
 
 const exists = file => access(file).then(() => true, () => false)
+const { platform, arch } = process
 
 const repository = 'prantlf/v-jsonlint'
 const name = 'jsonlint'
@@ -14,7 +14,7 @@ const platformSuffixes = {
   darwin: 'macos',
   win32: 'windows'
 }
-const archive = `${name}-${platformSuffixes[platform()]}-${arch()}.zip`
+const archive = `${name}-${platformSuffixes[platform]}-${arch}.zip`
 
 function cleanup() {
   return rm(archive, { force: true })
