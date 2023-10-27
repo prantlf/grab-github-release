@@ -1,3 +1,11 @@
+## [0.1.1](https://github.com/prantlf/grab-github-release/compare/v0.1.0...v0.1.1) (2023-10-27)
+
+
+### Bug Fixes
+
+* Do not try processing failed requests ([674a735](https://github.com/prantlf/grab-github-release/commit/674a73598a635de4b6084af36bd82855383eaac8))
+* Wait 5-10s between failing network requet attempts ([054e377](https://github.com/prantlf/grab-github-release/commit/054e377cf119cdcc16d8a6d036ac221018c15b93))
+
 # [0.1.0](https://github.com/prantlf/grab-github-release/compare/v0.0.1...v0.1.0) (2023-10-26)
 
 
