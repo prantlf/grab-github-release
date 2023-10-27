@@ -28,7 +28,6 @@
   "type": "module",
   "module": "dist/index.mjs",
   "main": "dist/index.cjs",
-  "browser": "dist/index.umd.min.js",
   "types": "dist/index.d.ts",
   "exports": {
     "require": "./dist/index.cjs",
@@ -90,7 +89,6 @@
     "grab-github-release": "link:",
     "rollup": "^4.1.4",
     "rollup-plugin-cleanup": "^3.2.1",
-    "rollup-plugin-swc-minify": "^1.1.0",
     "typescript": "^5.2.2"
   },
   "keywords": [

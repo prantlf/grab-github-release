@@ -66,7 +66,7 @@ after(async () => {
 test('download archive from the latest fixed version', async () => {
   const { archive: actualArchive, version: actualVersion } = await grab(
     { name, repository, version, platformSuffixes })
-  if (!await exists(archive)) throw new Error('archive not found')
+  ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
@@ -74,7 +74,7 @@ test('download archive from the latest fixed version', async () => {
 test('download archive from the latest symbolic version', async () => {
   const { archive: actualArchive, version: actualVersion } = await grab(
     { name, repository, version: 'latest', platformSuffixes })
-  if (!await exists(archive)) throw new Error('archive not found')
+  ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
@@ -82,7 +82,7 @@ test('download archive from the latest symbolic version', async () => {
 test('download archive from the latest semantic version', async () => {
   const { archive: actualArchive, version: actualVersion } = await grab(
     { name, repository, version: '>=0.0.1', platformSuffixes })
-  if (!await exists(archive)) throw new Error('archive not found')
+  ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
@@ -90,7 +90,7 @@ test('download archive from the latest semantic version', async () => {
 test('download archive from a fixed tag', async () => {
   const { archive: actualArchive, version: actualVersion } = await grab(
     { name, repository, version: `v${version}`, platformSuffixes })
-  if (!await exists(archive)) throw new Error('archive not found')
+  ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
@@ -98,7 +98,7 @@ test('download archive from a fixed tag', async () => {
 test('download archive from an old fixed version', async () => {
   const { archive: actualArchive, version: actualVersion } = await grab(
     { name, repository, version: '0.0.5', platformSuffixes })
-  if (!await exists(archive)) throw new Error('archive not found')
+  ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, '0.0.5')
   strictEqual(actualArchive, archive)
 })
@@ -106,7 +106,7 @@ test('download archive from an old fixed version', async () => {
 test('download archive from the latest fixed version with a guessed name', async () => {
   const { archive: actualArchive, version: actualVersion } = await grab(
     { repository, version, platformSuffixes })
-  if (!await exists(archive)) throw new Error('archive not found')
+  ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
@@ -114,8 +114,8 @@ test('download archive from the latest fixed version with a guessed name', async
 test('download archive from the latest implicit version and unpack executable', async () => {
   const { executable: actualExecutable, version: actualVersion } = await grab(
     { name, repository, platformSuffixes, unpackExecutable: true, verbose: true })
-  if (await exists(archive)) throw new Error('archive found')
-  if (!await exists(executable)) throw new Error('executable not found')
+  ok(!await exists(archive), 'archive found')
+  ok(await exists(executable), 'executable not found')
   strictEqual(actualVersion, version)
   strictEqual(actualExecutable, executable)
 })
@@ -124,7 +124,7 @@ test('download archive from the latest implicit version and unpack executable to
   await mkdir(targetDirectory, { recursive: true })
   const { executable: actualExecutable, version: actualVersion } = await grab(
     { name, repository, platformSuffixes, targetDirectory, unpackExecutable: true })
-  if (!await exists(actualExecutable)) throw new Error('executable not found')
+  ok(await exists(actualExecutable), 'executable not found')
   strictEqual(actualVersion, version)
   ok(actualExecutable.endsWith(executable))
 })
