@@ -7,6 +7,8 @@
 
 Downloads and optionally unpacks an archive from GitHub release assets for the current platform.
 
+If used to install a binary executable to a NPM package, [link-bin-executable] can help.
+
 ## Synopsis
 
 ```js
@@ -115,3 +117,4 @@ Copyright (c) 2023 Ferdinand Prantl
 Licensed under the MIT license.
 
 [Node.js]: http://nodejs.org/
+[link-bin-executable]: https://github.com/prantlf/link-bin-executable
