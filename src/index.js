@@ -9,6 +9,32 @@ import { open as openArchive } from 'yauzl'
 let log = debug('grabghr')
 const { chmod, unlink } = promises
 
+function delay() {
+  const delay = (5 + 5 * Math.random()) * 1000
+  log('wait %d ms before trying again', delay)
+  return new Promise(resolve => setTimeout(resolve, delay))
+}
+
+async function retry(action) {
+  for (let attempt = 0;;) {
+    try {
+      return await action()
+      /* c8 ignore next 5 */
+    } catch (err) {
+      if (++attempt === 3) throw err
+      log('attempt failed: %s', err.message)
+    }
+    await delay()
+  }
+}
+
+function fetchSafely(url) {
+  return retry(() => {
+    log('fetch "%s"', url)
+    return fetch(url)
+  })
+}
+
 function getArchiveSuffix(platformSuffixes) {
   let plat = platform()
   /* c8 ignore next */
@@ -20,8 +46,7 @@ async function getRelease(name, repo, verspec, platformSuffixes) {
   const suffix = getArchiveSuffix(platformSuffixes)
   const archive = name && `${name}${suffix}`
   const url = `https://api.github.com/repos/${repo}/releases`
-  log('enquire "%s"', url)
-  const res = await fetch(url)
+  const res = await fetchSafely(url)
   const releases = await res.json()
   log('%d releases', releases.length)
   for (const { tag_name, assets } of releases) {
@@ -53,7 +78,7 @@ async function getRelease(name, repo, verspec, platformSuffixes) {
 
 async function download(url, archive) {
   log('download "%s"', url)
-  const res = await fetch(url)
+  const res = await fetchSafely(url)
   await new Promise((resolve, reject) => {
     const stream = Readable.fromWeb(res.body)
     stream
