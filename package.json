@@ -87,9 +87,9 @@
     "c8": "^8.0.1",
     "denolint": "2.0.14",
     "grab-github-release": "link:",
-    "rollup": "^4.1.4",
+    "rollup": "^4.8.0",
     "rollup-plugin-cleanup": "^3.2.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.3"
   },
   "keywords": [
     "github",
