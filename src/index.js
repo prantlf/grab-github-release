@@ -7,7 +7,7 @@ import { open as openArchive } from 'yauzl'
 
 let log = debug('grabghr')
 const { chmod, unlink } = promises
-const { platform, arch } = process
+const { arch, platform } = process
 
 /* c8 ignore next 5 */
 function delay() {
@@ -43,15 +43,29 @@ function fetchSafely(url) {
   })
 }
 
-function getArchiveSuffix(platformSuffixes) {
-  /* c8 ignore next */
-  const plat = platformSuffixes && platformSuffixes[platform] || platform
-  return `-${plat}-${arch}.zip`
+const defaultPlatformSuffixes = {
+  darwin: ['macos'],
+  linux: [],
+  win32: ['windows']
 }
 
-async function getRelease(name, repo, verspec, platformSuffixes) {
-  const suffix = getArchiveSuffix(platformSuffixes)
-  const archive = name && `${name}${suffix}`
+const defaultArchSuffixes = {
+  arm64: ['aarch64'],
+  x64: ['amd64', 'x86_64', 'x86']
+}
+
+function getArchiveSuffixes(platformSuffixes, archSuffixes) {
+  /* c8 ignore next 3 */
+  const plats = platformSuffixes && platformSuffixes[platform] || defaultPlatformSuffixes[platform] || []
+  if (!plats.includes(platform)) plats.push(platform)
+  const archs = archSuffixes && archSuffixes[arch] || defaultArchSuffixes[arch] || []
+  if (!archs.includes(arch)) archs.push(arch)
+  return plats.map(plat => archs.map(arch => `-${plat}-${arch}.zip`)).flat()
+}
+
+async function getRelease(name, repo, verspec, platformSuffixes, archSuffixes) {
+  const suffixes = getArchiveSuffixes(platformSuffixes, archSuffixes)
+  const archives = name && suffixes.map(suffix => `${name}${suffix}`)
   const url = `https://api.github.com/repos/${repo}/releases`
   const res = await fetchSafely(url)
   const releases = await res.json()
@@ -62,20 +76,23 @@ async function getRelease(name, repo, verspec, platformSuffixes) {
     if (valid(version) && (verspec === 'latest' || satisfies(version, verspec))) {
       log('match "%s" (%s)', version, tag_name)
       for (const { name: file, browser_download_url: url } of assets) {
-        if (archive) {
-          if (file === archive) {
+        if (archives) {
+          if (archives.includes(file)) {
             log('match "%s"', file)
-            return { name, version, archive, url }
+            return { name, version, archive: file, url }
           }
-        } else if (file.endsWith(suffix)) {
-          log('match by suffix "%s"', file)
-          const name = file.substring(0, file.length - suffix.length)
-          return { name, version, archive: file, url }
+        } else {
+          const suffix = suffixes.find(suffix => file.endsWith(suffix))
+          if (suffix) {
+            log('match by suffix "%s"', file)
+            const name = file.substring(0, file.length - suffix.length)
+            return { name, version, archive: file, url }
+          }
         }
         log('skip "%s"', file)
       }
       /* c8 ignore next 7 */
-      throw new Error(`archive ${archive ? '"' + archive + '"' : 'ending with ' + suffix} not found in ${version}`)
+      throw new Error(`no suitable archive found for ${version}`)
     } else {
       log('skip "%s" (%s)', version, tag_name)
     }
@@ -133,18 +150,12 @@ async function makeExecutable(executable) {
   }
 }
 
-export default async function grab({ name, repository, version, platformSuffixes, targetDirectory, unpackExecutable, verbose }) {
+export default async function grab({ name, repository, version, platformSuffixes, archSuffixes, targetDirectory, unpackExecutable, verbose }) {
   if (verbose) log = console.log.bind(console)
   if (!version) version = 'latest'
   const verspec = clean(version) || version
-  let archive, url
-  if (name && valid(verspec)) {
-    version = verspec
-    archive = `${name}${getArchiveSuffix(platformSuffixes)}`
-    url = `https://github.com/${repository}/releases/download/v${version}/${archive}`
-  } else {
-    ({ name, version, archive, url } = await getRelease(name, repository, verspec, platformSuffixes))
-  }
+  let archive, url;
+  ({ name, version, archive, url } = await getRelease(name, repository, verspec, platformSuffixes, archSuffixes))
   if (targetDirectory) archive = join(targetDirectory, archive)
   await download(url, archive)
   if (unpackExecutable) {

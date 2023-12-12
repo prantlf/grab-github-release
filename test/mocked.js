@@ -8,21 +8,25 @@ import releases from './data/releases.json' assert { type: 'json' }
 
 const exists = file => access(file).then(() => true, () => false)
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const { platform, arch } = process
+const { arch, platform } = process
 
 const repository = 'prantlf/v-jsonlint'
 const name = 'jsonlint'
 const executable = join('.', platform != 'win32' ? name : `${name}.exe`)
 const version = '0.0.6'
 const platformSuffixes = {
-  linux: 'linux',
-  darwin: 'macos',
-  win32: 'windows'
+  linux: ['linux'],
+  darwin: ['macos'],
+  win32: ['windows']
 }
-const archive = `${name}-${platformSuffixes[platform]}-${arch}.zip`
+const archSuffixes = {
+  arm64: ['arm64'],
+  x64: ['x64', 'x86_64']
+}
+const archive = `${name}-${platformSuffixes[platform][0]}-${archSuffixes[arch][0]}.zip`
 const content = new Blob(
   [await readFile(join(__dirname, `data/${archive}`))],
-  { type: 'applicaiton.zip' }
+  { type: 'application.zip' }
 )
 const targetDirectory = join(__dirname, 'tmp')
 
@@ -64,14 +68,14 @@ after(async () => {
 })
 
 test('download archive from the latest fixed version', async () => {
-  const { archive: actualArchive, version: actualVersion } = await grab(
-    { name, repository, version, platformSuffixes })
+  const { archive: actualArchive, version: actualVersion } =
+    await grab({ name, repository, version })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
 
-test('download archive from the latest symbolic version', async () => {
+test('download archive from the latest symbolic version with platforms', async () => {
   const { archive: actualArchive, version: actualVersion } = await grab(
     { name, repository, version: 'latest', platformSuffixes })
   ok(await exists(archive), 'archive not found')
@@ -79,9 +83,9 @@ test('download archive from the latest symbolic version', async () => {
   strictEqual(actualArchive, archive)
 })
 
-test('download archive from the latest semantic version', async () => {
+test('download archive from the latest semantic version with architectures', async () => {
   const { archive: actualArchive, version: actualVersion } = await grab(
-    { name, repository, version: '>=0.0.1', platformSuffixes })
+    { name, repository, version: '>=0.0.1', archSuffixes })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
@@ -89,7 +93,7 @@ test('download archive from the latest semantic version', async () => {
 
 test('download archive from a fixed tag', async () => {
   const { archive: actualArchive, version: actualVersion } = await grab(
-    { name, repository, version: `v${version}`, platformSuffixes })
+    { name, repository, version: `v${version}` })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
@@ -97,15 +101,14 @@ test('download archive from a fixed tag', async () => {
 
 test('download archive from an old fixed version', async () => {
   const { archive: actualArchive, version: actualVersion } = await grab(
-    { name, repository, version: '0.0.5', platformSuffixes })
+    { name, repository, version: '0.0.5' })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, '0.0.5')
   strictEqual(actualArchive, archive)
 })
 
 test('download archive from the latest fixed version with a guessed name', async () => {
-  const { archive: actualArchive, version: actualVersion } = await grab(
-    { repository, version, platformSuffixes })
+  const { archive: actualArchive, version: actualVersion } = await grab({ repository, version })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
@@ -113,7 +116,7 @@ test('download archive from the latest fixed version with a guessed name', async
 
 test('download archive from the latest implicit version and unpack executable', async () => {
   const { executable: actualExecutable, version: actualVersion } = await grab(
-    { name, repository, platformSuffixes, unpackExecutable: true, verbose: true })
+    { name, repository, unpackExecutable: true, verbose: true })
   ok(!await exists(archive), 'archive found')
   ok(await exists(executable), 'executable not found')
   strictEqual(actualVersion, version)
@@ -123,7 +126,7 @@ test('download archive from the latest implicit version and unpack executable', 
 test('download archive from the latest implicit version and unpack executable to a custom directory', async () => {
   await mkdir(targetDirectory, { recursive: true })
   const { executable: actualExecutable, version: actualVersion } = await grab(
-    { name, repository, platformSuffixes, targetDirectory, unpackExecutable: true })
+    { name, repository, targetDirectory, unpackExecutable: true })
   ok(await exists(actualExecutable), 'executable not found')
   strictEqual(actualVersion, version)
   ok(actualExecutable.endsWith(executable))

@@ -13,9 +13,13 @@ test('Type declarations for TypeScript', () => {
     name: '',
     version: '',
     platformSuffixes: {
-      linux: '',
-      darwin: '',
-      win32: ''
+      linux: [''],
+      darwin: [''],
+      win32: ['']
+    },
+    archSuffixes: {
+      arm64: [''],
+      x64: ['']
     },
     targetDirectory: '',
     unpackExecutable: true

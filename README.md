@@ -16,17 +16,23 @@ import grab from 'grab-github-release'
 
 try {
   const repository = 'prantlf/v-jsonlint'
-  const platformSuffixes = {
-    darwin: 'macos',
-    win32: 'windows'
-  }
   // downloads and unpacks the jsonlint executable to the current directory
-  await grab({ repository, platformSuffixes, unpackExecutable: true })
+  await grab({ repository, unpackExecutable: true })
 } catch(err) {
   console.error(err.message)
   process.exitCode = 1
 }
 ```
+
+The archive with the executable is expected to be:
+
+    {name}-{platform}-{architecture}.zip
+
+where:
+
+* `{name}` is the name of the tool (executable)
+* `{platform}` is the name of the target platform, by default: `linux`, `macos` or `windows`
+* `{architecture}` is the name of the targetarchitecture, by default `aarch64` or `arm64` (64-bit ARM), `amd64`, `x86_64`, `x64` or `x86` (64-bit AMD)
 
 ## Installation
 
@@ -54,7 +60,8 @@ Make sure, that you use [Node.js] version 18 or newer.
       -r|--repository <repository>  GitHub repository formatted "owner/name"
       -i|--version-spec <semver>    semantic version specifier or "latest"
       -n|--name <file-name>         archive name without the platform suffix
-      -p|--platform-suffixes <map>  unpack the executable and remove the archive
+      -p|--platform-suffixes <map>  platform name mapping
+      -a|--arch-suffixes <map>      architecture name mapping
       -e|--unpack-exe               unpack the executable and remove the archive
       -v|--verbose                  prints extra information on the console
       -V|--version                  print version number and exit
@@ -64,7 +71,7 @@ Make sure, that you use [Node.js] version 18 or newer.
     from the first archive asset found for the current platform, if not specified.
 
     Examples:
-      $ grab-github-release -r prantlf/v-jsonlint -p darwin=macos,win32=windows -u
+      $ grab-github-release -r prantlf/v-jsonlint -p darwin=macos,win32=windows:win64 -u
       $ grab-github-release -r prantlf/v-jsonlint -i >=0.0.6
 
 ## API
@@ -72,7 +79,7 @@ Make sure, that you use [Node.js] version 18 or newer.
 ```ts
 // map where keys are Node.js platform names and values are their replacements
 // to be used in names of archive looked for among  GitHub release assets
-type PlatformSuffixes = Record<string, string>
+type ArchiveSuffixes = Record<string, string[]>
 
 interface GrabOptions {
   // GitHub repository formatted "owner/name", mandatory
@@ -82,9 +89,15 @@ interface GrabOptions {
   // archive name without the platform and architecture suffix
   // and without the ".zip" extension as well
   name?: string
-  // archive name without the platform suffix; if not specified, it will be
-  // inferred from the first archive asset found for the current platform
-  platformSuffixes?: PlatformSuffixes
+  // recognised platforms organised by the Node.js platform name; defaults:
+  // - darwin: darwin, macos
+  // - linux: linux
+  // - win32: win32, windows
+  platformSuffixes?: ArchiveSuffixes
+  // recognised architectures organised by the Node.js platform name; defaults:
+  // - arm64: aarch64, arm64
+  // - x64: amd64, x86_64, x64, x86
+  archSuffixes?: ArchiveSuffixes
   // directory to write the archive or executable to; if not specified,
   // files will be written to the current directory
   targetDirectory?: string

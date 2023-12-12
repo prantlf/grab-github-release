@@ -2,7 +2,7 @@
  * map where keys are Node.js platform names and values are their replacements
  * to be used in names of archive looked for among  GitHub release assets
  */
-type PlatformSuffixes = Record<string, string>
+type ArchiveSuffixes = Record<string, string[]>
 
 interface GrabOptions {
   /**
@@ -19,10 +19,18 @@ interface GrabOptions {
    */
   name?: string
   /**
-   * archive name without the platform suffix; if not specified, it will be
-   * inferred from the first archive asset found for the current platform
+   * recognised platforms organised by the Node.js platform name; defaults:
+   * - darwin: darwin, macos
+   * - linux: linux
+   * - win32: win32, windows
    */
-  platformSuffixes?: PlatformSuffixes
+  platformSuffixes?: ArchiveSuffixes
+  /**
+   * recognised architectures organised by the Node.js platform name; defaults:
+   * - arm64: aarch64, arm64
+   * - x64: amd64, x86_64, x64, x86
+   */
+  archSuffixes?: ArchiveSuffixes
   /**
    * directory to write the archive or executable to; if not specified,
    * files will be written to the current directory

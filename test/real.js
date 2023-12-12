@@ -25,8 +25,8 @@ before(cleanup)
 after(cleanup)
 
 test('download archive from a fixed version', async () => {
-  const { archive: actualArchive, version: actualVersion } = await grab(
-    { name, repository, version, platformSuffixes })
+  const { archive: actualArchive, version: actualVersion } =
+    await grab({ name, repository, version })
   if (!await exists(archive)) throw new Error('archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)

@@ -11,7 +11,8 @@ Options:
   -r|--repository <repository>  GitHub repository formatted "owner/name"
   -i|--version-spec <semver>    semantic version specifier or "latest"
   -n|--name <file-name>         archive name without the platform suffix
-  -p|--platform-suffixes <map>  unpack the executable and remove the archive
+  -p|--platform-suffixes <map>  platform name mapping
+  -a|--arch-suffixes <map>      architecture name mapping
   -t|--target-dir <dir-name>    directory to write the output files to
   -e|--unpack-exe               unpack the executable and remove the archive
   -v|--verbose                  prints extra information on the console
@@ -22,7 +23,7 @@ The version specifier is "latest" by default. The file name will be inferred
 from the first archive asset found for the current platform, if not specified.
 
 Examples:
-  $ grab-github-release -r prantlf/v-jsonlint -p darwin=macos,win32=windows -u
+  $ grab-github-release -r prantlf/v-jsonlint -p darwin=macos,win32=windows:win64 -u
   $ grab-github-release -r prantlf/v-jsonlint -i >=0.0.6`)
 }
 
@@ -32,7 +33,8 @@ function fail(message) {
 }
 
 const { argv } = process
-let   repository, version, name, platformSuffixes, targetDirectory, unpackExecutable, verbose
+let   repository, version, name, platformSuffixes, archSuffixes,
+      targetDirectory, unpackExecutable, verbose
 
 for (let i = 2, l = argv.length; i < l; ++i) {
   const arg = argv[i]
@@ -56,7 +58,16 @@ for (let i = 2, l = argv.length; i < l; ++i) {
           if (!platformSuffixes) platformSuffixes = {}
           for (const entry of entries.trim().split(',')) {
             const [key, val] = entry.trim().split('=')
-            platformSuffixes[key.trim()] = val.trim()
+            platformSuffixes[key.trim()] = val.trim().split(':').map(val => val.trim())
+          }
+          return
+        case 'a': case 'arch-suffixes':
+          entries = match[4] || argv[++i]
+          if (!entries) fail('missing architecture suffix map')
+          if (!archSuffixes) archSuffixes = {}
+          for (const entry of entries.trim().split(',')) {
+            const [key, val] = entry.trim().split('=')
+            archSuffixes[key.trim()] = val.trim().split(':').map(val => val.trim())
           }
           return
         case 't': case 'target-dir':
@@ -102,7 +113,7 @@ if (!repository) {
 }
 
 try {
-  await grab({ repository, version, name, platformSuffixes, unpackExecutable, verbose })
+  await grab({ repository, version, name, platformSuffixes, archSuffixes, unpackExecutable, verbose })
 } catch(err) {
   console.error(err.message)
   process.exitCode = 1
