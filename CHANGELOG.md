@@ -1,3 +1,10 @@
+# [0.2.0](https://github.com/prantlf/grab-github-release/compare/v0.1.1...v0.2.0) (2023-12-12)
+
+
+### Features
+
+* Allow mapping of architectures too ([8d61855](https://github.com/prantlf/grab-github-release/commit/8d6185566c41a3b8c77d00fd7058a445ba1bf77c))
+
 ## [0.1.1](https://github.com/prantlf/grab-github-release/compare/v0.1.0...v0.1.1) (2023-10-27)
 
 
