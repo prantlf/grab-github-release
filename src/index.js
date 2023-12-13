@@ -9,9 +9,10 @@ let log = debug('grabghr')
 const { chmod, unlink } = promises
 const { arch, platform } = process
 
-/* c8 ignore next 5 */
-function delay() {
-  const delay = Math.floor((5 + 5 * Math.random()) * 1000)
+/* c8 ignore next 6 */
+function delay(seconds) {
+  if (!seconds) seconds = Math.floor(5 + 5 * Math.random())
+  const delay = seconds * 1000
   log('wait %d ms before trying again', delay)
   return new Promise(resolve => setTimeout(resolve, delay))
 }
@@ -46,8 +47,32 @@ function fetchSafely(url, token, options = {}) {
        ...options
     }
     const res = await fetch(url, options)
-    /* c8 ignore next 5 */
+    /* c8 ignore next 29 */
     if (!res.ok) {
+      try {
+        const response = await res.text()
+        log('%s', response)
+      } catch {}
+      if (res.status === 403 || res.status === 429) {
+        const {
+          'retry-after': after,
+          'x-ratelimit-limit': limit,
+          'x-ratelimit-remaining': remaining,
+          'x-ratelimit-used': used,
+          'x-ratelimit-reset': reset,
+          'x-ratelimit-resource': resource
+        } = res.headers
+        log('Retry first after: %s', after)
+        log('The maximum number of requests that you can make per hour%s', limit)
+        log('The number of requests remaining in the current rate limit window%s', remaining)
+        log('The number of requests you have made in the current rate limit window%s', used)
+        log('The time at which the current rate limit window resets, in UTC epoch seconds%s', reset)
+        log('The rate limit resource that the request counted against%s', resource)
+        const wait = after || reset
+        if (wait) {
+          await delay(wait)
+        }
+      }
       const err = new Error(`GET "${url}" failed: ${res.status} ${res.statusText}`)
       err.response = res
       throw err
