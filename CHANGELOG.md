@@ -1,3 +1,11 @@
+## [0.2.2](https://github.com/prantlf/grab-github-release/compare/v0.2.1...v0.2.2) (2023-12-13)
+
+
+### Bug Fixes
+
+* Add GitHub API version header ([66c2ab8](https://github.com/prantlf/grab-github-release/commit/66c2ab8a10e3a28773a32230262941c77c025be2))
+* Wait until the GitHub API rate limit allows the next request ([f995aaa](https://github.com/prantlf/grab-github-release/commit/f995aaa38ca33d0bf7e7ea64df0e3c4c547f3304))
+
 ## [0.2.1](https://github.com/prantlf/grab-github-release/compare/v0.2.0...v0.2.1) (2023-12-13)
 
 
