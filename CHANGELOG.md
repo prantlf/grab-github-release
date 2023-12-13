@@ -1,3 +1,10 @@
+## [0.2.3](https://github.com/prantlf/grab-github-release/compare/v0.2.2...v0.2.3) (2023-12-13)
+
+
+### Bug Fixes
+
+* Log if the GitHub API call was authorized ([1ab57ea](https://github.com/prantlf/grab-github-release/commit/1ab57ea51f9f0cba263a562b6ffc820aec3f3cb6))
+
 ## [0.2.2](https://github.com/prantlf/grab-github-release/compare/v0.2.1...v0.2.2) (2023-12-13)
 
 
