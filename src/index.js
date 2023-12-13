@@ -29,16 +29,22 @@ async function retry(action) {
   }
 }
 
-function fetchSafely(url, token) {
+function fetchSafely(url, token, options = {}) {
   return retry(async () => {
     log('fetch "%s"', url)
-    /* c8 ignore next 6 */
+    /* c8 ignore next 7 */
     if (!token) token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN
-    const options = token ? {
-      headers: {
-        Authorization: `Bearer ${token}`
+    if (token) {
+      options.headers = {
+        Authorization: `Bearer ${token}`,
+        ...options.headers
       }
-    } : undefined
+    }
+    options = {
+      'User-Agent': 'prantlf/grab-github-release',
+      'X-GitHub-Api-Version': '2022-11-28',
+       ...options
+    }
     const res = await fetch(url, options)
     /* c8 ignore next 5 */
     if (!res.ok) {
