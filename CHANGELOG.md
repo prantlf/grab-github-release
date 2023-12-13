@@ -1,3 +1,10 @@
+## [0.2.1](https://github.com/prantlf/grab-github-release/compare/v0.2.0...v0.2.1) (2023-12-13)
+
+
+### Bug Fixes
+
+* Authorize fetches to overccome GitHub API rate limit ([061abf8](https://github.com/prantlf/grab-github-release/commit/061abf88714b35e3bcc035f40ce3619bca9b28d3))
+
 # [0.2.0](https://github.com/prantlf/grab-github-release/compare/v0.1.1...v0.2.0) (2023-12-12)
 
 

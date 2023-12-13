@@ -1,6 +1,6 @@
 {
   "name": "grab-github-release",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Downloads and optionally unpacks an archive from GitHub release assets for the current platform.",
   "author": {
     "name": "Ferdinand Prantl",
