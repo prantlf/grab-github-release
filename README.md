@@ -62,13 +62,17 @@ Make sure, that you use [Node.js] version 18 or newer.
       -n|--name <file-name>         archive name without the platform suffix
       -p|--platform-suffixes <map>  platform name mapping
       -a|--arch-suffixes <map>      architecture name mapping
+      -t|--target-dir <dir-name>    directory to write the output files to
       -e|--unpack-exe               unpack the executable and remove the archive
+      -g|--gh-token <token>         GitHub authentication token
       -v|--verbose                  prints extra information on the console
       -V|--version                  print version number and exit
       -h|--help                     print usage instructions and exit
 
     The version specifier is "latest" by default. The file name will be inferred
     from the first archive asset found for the current platform, if not specified.
+    If GitHub token is not specified, variables GITHUB_TOKEN and GH_TOKEN in the
+    process environment will be checked too.
 
     Examples:
       $ grab-github-release -r prantlf/v-jsonlint -p darwin=macos,win32=windows:win64 -u

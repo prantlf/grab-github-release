@@ -15,12 +15,15 @@ Options:
   -a|--arch-suffixes <map>      architecture name mapping
   -t|--target-dir <dir-name>    directory to write the output files to
   -e|--unpack-exe               unpack the executable and remove the archive
+  -g|--gh-token <token>         GitHub authentication token
   -v|--verbose                  prints extra information on the console
   -V|--version                  print version number and exit
   -h|--help                     print usage instructions and exit
 
 The version specifier is "latest" by default. The file name will be inferred
 from the first archive asset found for the current platform, if not specified.
+If GitHub token is not specified, variables GITHUB_TOKEN and GH_TOKEN in the
+process environment will be checked too.
 
 Examples:
   $ grab-github-release -r prantlf/v-jsonlint -p darwin=macos,win32=windows:win64 -u
@@ -34,7 +37,7 @@ function fail(message) {
 
 const { argv } = process
 let   repository, version, name, platformSuffixes, archSuffixes,
-      targetDirectory, unpackExecutable, verbose
+      targetDirectory, unpackExecutable, token, verbose
 
 for (let i = 2, l = argv.length; i < l; ++i) {
   const arg = argv[i]
@@ -75,6 +78,9 @@ for (let i = 2, l = argv.length; i < l; ++i) {
           return
         case 'e': case 'unpack-exe':
           unpackExecutable = flag
+          return
+        case 'g': case 'gh-token':
+          token = match[4] || argv[++i]
           return
         case 'v': case 'verbose':
           verbose = flag

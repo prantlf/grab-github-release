@@ -29,10 +29,17 @@ async function retry(action) {
   }
 }
 
-function fetchSafely(url) {
+function fetchSafely(url, token) {
   return retry(async () => {
     log('fetch "%s"', url)
-    const res = await fetch(url)
+    /* c8 ignore next 6 */
+    if (!token) token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN
+    const options = token ? {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    } : undefined
+    const res = await fetch(url, options)
     /* c8 ignore next 5 */
     if (!res.ok) {
       const err = new Error(`GET "${url}" failed: ${res.status} ${res.statusText}`)
@@ -63,11 +70,11 @@ function getArchiveSuffixes(platformSuffixes, archSuffixes) {
   return plats.map(plat => archs.map(arch => `-${plat}-${arch}.zip`)).flat()
 }
 
-async function getRelease(name, repo, verspec, platformSuffixes, archSuffixes) {
+async function getRelease(name, repo, verspec, platformSuffixes, archSuffixes, token) {
   const suffixes = getArchiveSuffixes(platformSuffixes, archSuffixes)
   const archives = name && suffixes.map(suffix => `${name}${suffix}`)
   const url = `https://api.github.com/repos/${repo}/releases`
-  const res = await fetchSafely(url)
+  const res = await fetchSafely(url, token)
   const releases = await res.json()
   log('%d releases', releases.length)
   for (const { tag_name, assets } of releases) {
@@ -100,9 +107,9 @@ async function getRelease(name, repo, verspec, platformSuffixes, archSuffixes) {
   throw new Error(`version matching "${verspec}" not found`)
 }
 
-async function download(url, archive) {
+async function download(url, archive, token) {
   log('download "%s"', url)
-  const res = await fetchSafely(url)
+  const res = await fetchSafely(url, token)
   await new Promise((resolve, reject) => {
     const stream = Readable.fromWeb(res.body)
     stream
@@ -150,14 +157,14 @@ async function makeExecutable(executable) {
   }
 }
 
-export default async function grab({ name, repository, version, platformSuffixes, archSuffixes, targetDirectory, unpackExecutable, verbose }) {
+export default async function grab({ name, repository, version, platformSuffixes, archSuffixes, targetDirectory, unpackExecutable, token, verbose }) {
   if (verbose) log = console.log.bind(console)
   if (!version) version = 'latest'
   const verspec = clean(version) || version
   let archive, url;
-  ({ name, version, archive, url } = await getRelease(name, repository, verspec, platformSuffixes, archSuffixes))
+  ({ name, version, archive, url } = await getRelease(name, repository, verspec, platformSuffixes, archSuffixes, token))
   if (targetDirectory) archive = join(targetDirectory, archive)
-  await download(url, archive)
+  await download(url, archive, token)
   if (unpackExecutable) {
     const executable = await unpack(archive, targetDirectory)
     await makeExecutable(executable)
