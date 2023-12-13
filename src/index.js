@@ -32,8 +32,7 @@ async function retry(action) {
 
 function fetchSafely(url, token, options = {}) {
   return retry(async () => {
-    log('fetch "%s"', url)
-    /* c8 ignore next 7 */
+    /* c8 ignore next 8 */
     if (!token) token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN
     if (token) {
       options.headers = {
@@ -41,6 +40,7 @@ function fetchSafely(url, token, options = {}) {
         ...options.headers
       }
     }
+    log('fetch "%s"%s', url, token ? ' (authorized)' : '')
     options = {
       'User-Agent': 'prantlf/grab-github-release',
       'X-GitHub-Api-Version': '2022-11-28',
