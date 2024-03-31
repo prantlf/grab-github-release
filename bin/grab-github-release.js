@@ -119,7 +119,17 @@ if (!repository) {
 }
 
 try {
-  await grab({ repository, version, name, platformSuffixes, archSuffixes, unpackExecutable, verbose })
+  await grab({
+    repository,
+    version,
+    name,
+    platformSuffixes,
+    archSuffixes,
+    targetDirectory,
+    unpackExecutable,
+    token,
+    verbose
+  })
 } catch(err) {
   console.error(err.message)
   process.exitCode = 1
