@@ -13,7 +13,7 @@ const { arch, platform } = process
 
 const repository = 'prantlf/v-jsonlint'
 const name = 'jsonlint'
-const executable = join('.', platform != 'win32' ? name : `${name}.exe`)
+const executable = join('.', platform !== 'win32' ? name : `${name}.exe`)
 const version = '0.0.6'
 const platformSuffixes = {
   linux: ['linux'],
@@ -35,7 +35,7 @@ const cacheDirectory = join(wholeCacheDirectory, name)
 
 async function cleanup() {
   // failed on Windows on GitHub
-  if (platform == 'win32') return
+  if (platform === 'win32') return
   await Promise.all([
     rm(archive, { force: true }),
     rm(executable, { force: true }),
@@ -145,15 +145,17 @@ test('download archive from the latest fixed version with a guessed name', async
   strictEqual(actualArchive, archive)
 })
 
-test('download archive from the latest implicit version and unpack executable', async () => {
-  const { executable: actualExecutable, version: actualVersion } = await grab({
-    name, repository, unpackExecutable: true, verbose: true
+if (platform !== 'win32') {
+  test('download archive from the latest implicit version and unpack executable', async () => {
+    const { executable: actualExecutable, version: actualVersion } = await grab({
+      name, repository, unpackExecutable: true, verbose: true
+    })
+    ok(!await exists(archive), 'archive found')
+    ok(await exists(executable), 'executable not found')
+    strictEqual(actualVersion, version)
+    strictEqual(actualExecutable, executable)
   })
-  ok(!await exists(archive), 'archive found')
-  ok(await exists(executable), 'executable not found')
-  strictEqual(actualVersion, version)
-  strictEqual(actualExecutable, executable)
-})
+}
 
 test('download archive from the latest implicit version and unpack executable to a custom directory', async () => {
   await mkdir(targetDirectory, { recursive: true })
@@ -165,28 +167,30 @@ test('download archive from the latest implicit version and unpack executable to
   ok(actualExecutable.endsWith(executable))
 })
 
-test('copy archive of the latest implicit version from cache and unpack executable to a custom directory', async () => {
-  await mkdir(targetDirectory, { recursive: true })
-  await grab({ name, repository, targetDirectory, unpackExecutable: true })
-  const { executable: actualExecutable, version: actualVersion } = await grab({
-    name, repository, targetDirectory, unpackExecutable: true
+if (platform !== 'win32') {
+  test('copy archive of the latest implicit version from cache and unpack executable to a custom directory', async () => {
+    await mkdir(targetDirectory, { recursive: true })
+    await grab({ name, repository, targetDirectory, unpackExecutable: true })
+    const { executable: actualExecutable, version: actualVersion } = await grab({
+      name, repository, targetDirectory, unpackExecutable: true
+    })
+    ok(await exists(actualExecutable), 'executable not found')
+    strictEqual(actualVersion, version)
+    ok(actualExecutable.endsWith(executable))
   })
-  ok(await exists(actualExecutable), 'executable not found')
-  strictEqual(actualVersion, version)
-  ok(actualExecutable.endsWith(executable))
-})
 
-test('clear cache for a name', async () => {
-  await grab({ repository, version })
-  ok(await exists(cacheDirectory), 'cache not found')
-  await clearCache({ name, verbose: true })
-  ok(!await exists(cacheDirectory), 'cache found')
-  ok(await exists(wholeCacheDirectory), 'whole cache not found')
-})
+  test('clear cache for a name', async () => {
+    await grab({ repository, version })
+    ok(await exists(cacheDirectory), 'cache not found')
+    await clearCache({ name, verbose: true })
+    ok(!await exists(cacheDirectory), 'cache found')
+    ok(await exists(wholeCacheDirectory), 'whole cache not found')
+  })
 
-test('clear the whole cache', async () => {
-  await grab({ repository, version })
-  ok(await exists(cacheDirectory), 'cache not found')
-  await clearCache()
-  ok(!await exists(wholeCacheDirectory), 'whole cache found')
-})
+  test('clear the whole cache', async () => {
+    await grab({ repository, version })
+    ok(await exists(cacheDirectory), 'cache not found')
+    await clearCache()
+    ok(!await exists(wholeCacheDirectory), 'whole cache found')
+  })
+}

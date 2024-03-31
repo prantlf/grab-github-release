@@ -269,7 +269,7 @@ function unpack(archive, targetDirectory) {
 }
 
 async function makeExecutable(executable) {
-  if (platform != 'win32') {
+  if (platform !== 'win32') {
     log('make "%s" executable', executable)
     await chmod(executable, 0o755)
   }
