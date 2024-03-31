@@ -1,3 +1,30 @@
+# [1.0.0](https://github.com/prantlf/grab-github-release/compare/v0.2.3...v1.0.0) (2024-03-31)
+
+
+### Bug Fixes
+
+* Upgrade depednencies ([4af2502](https://github.com/prantlf/grab-github-release/commit/4af2502a4b47af202088e6bb887c08bfcb63355c))
+* Use command-line args targetDirectory and token ([edf3d57](https://github.com/prantlf/grab-github-release/commit/edf3d57dae96c965e925356a1546f6ddf60c190d))
+
+
+### Features
+
+* Add function and command-line option for clearing cache ([0d5ba64](https://github.com/prantlf/grab-github-release/commit/0d5ba64d54c983ed1c20159ec23dbf8108bd2f04))
+* Save downloaded zip files to cache for being used next ([6c3bf05](https://github.com/prantlf/grab-github-release/commit/6c3bf0592e9bdfe0ee121310ddb2a9a054385d2c))
+
+
+### BREAKING CHANGES
+
+* The package exports only named exports from now on.
+If you imported the function `grab` as a default export, import it
+by the name `grab` as a named export from now on. The command-line
+tool works as it did with no breaking change.
+* Although caching the archives downloaded from GitHub
+releases to ~/.cache/grabghr by default should be transparent and should
+not affect any usage scenario, it might influence the speed or disk
+usage of a particular application. That is why this is formally declared
+as a breaking change.
+
 ## [0.2.3](https://github.com/prantlf/grab-github-release/compare/v0.2.2...v0.2.3) (2023-12-13)
 
 
