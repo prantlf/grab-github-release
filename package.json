@@ -77,19 +77,19 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "semver": "^7.5.4",
-    "yauzl": "^2.10.0"
+    "semver": "^7.6.0",
+    "yauzl": "^3.1.2"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@unixcompat/cp.js": "^3.0.0",
-    "c8": "^8.0.1",
+    "c8": "^9.1.0",
     "denolint": "2.0.14",
     "grab-github-release": "link:",
-    "rollup": "^4.8.0",
+    "rollup": "^4.13.2",
     "rollup-plugin-cleanup": "^3.2.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.3"
   },
   "keywords": [
     "github",
