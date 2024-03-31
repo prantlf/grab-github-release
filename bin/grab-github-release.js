@@ -15,6 +15,7 @@ Options:
   -a|--arch-suffixes <map>      architecture name mapping
   -t|--target-dir <dir-name>    directory to write the output files to
   -e|--unpack-exe               unpack the executable and remove the archive
+  -c|--cache                    use ~/.cache/grabghr as cache
   -g|--gh-token <token>         GitHub authentication token
   -v|--verbose                  prints extra information on the console
   -V|--version                  print version number and exit
@@ -37,7 +38,7 @@ function fail(message) {
 
 const { argv } = process
 let   repository, version, name, platformSuffixes, archSuffixes,
-      targetDirectory, unpackExecutable, token, verbose
+      targetDirectory, unpackExecutable, cache, token, verbose
 
 for (let i = 2, l = argv.length; i < l; ++i) {
   const arg = argv[i]
@@ -78,6 +79,9 @@ for (let i = 2, l = argv.length; i < l; ++i) {
           return
         case 'e': case 'unpack-exe':
           unpackExecutable = flag
+          return
+        case 'c': case 'cache':
+          cache = flag
           return
         case 'g': case 'gh-token':
           token = match[4] || argv[++i]
@@ -127,6 +131,7 @@ try {
     archSuffixes,
     targetDirectory,
     unpackExecutable,
+    cache,
     token,
     verbose
   })

@@ -64,6 +64,7 @@ Make sure, that you use [Node.js] version 18 or newer.
       -a|--arch-suffixes <map>      architecture name mapping
       -t|--target-dir <dir-name>    directory to write the output files to
       -e|--unpack-exe               unpack the executable and remove the archive
+      -c|--cache                    use ~/.cache/grabghr as cache
       -g|--gh-token <token>         GitHub authentication token
       -v|--verbose                  prints extra information on the console
       -V|--version                  print version number and exit

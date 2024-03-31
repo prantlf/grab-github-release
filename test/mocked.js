@@ -1,6 +1,7 @@
 import { ok, strictEqual } from 'assert'
 import { access, mkdir, readFile, rm } from 'fs/promises'
 import { after, before, beforeEach, test, mock } from 'node:test'
+import { homedir } from 'os'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import grab from 'grab-github-release'
@@ -29,6 +30,7 @@ const content = new Blob(
   { type: 'application.zip' }
 )
 const targetDirectory = join(__dirname, 'tmp')
+const cacheDirectory = join(homedir(), '.cache/grabghr/', name)
 
 async function cleanup() {
   // failed on Windows on GitHub
@@ -36,7 +38,8 @@ async function cleanup() {
   await Promise.all([
     rm(archive, { force: true }),
     rm(executable, { force: true }),
-    rm(targetDirectory, { recursive: true, force: true })
+    rm(targetDirectory, { recursive: true, force: true }),
+    rm(cacheDirectory, { recursive: true, force: true })
   ])
 }
 
@@ -68,55 +71,83 @@ after(async () => {
 })
 
 test('download archive from the latest fixed version', async () => {
-  const { archive: actualArchive, version: actualVersion } =
-    await grab({ name, repository, version })
+  const { archive: actualArchive, version: actualVersion } = await grab({
+    name, repository, version
+  })
+  ok(await exists(archive), 'archive not found')
+  strictEqual(actualVersion, version)
+  strictEqual(actualArchive, archive)
+})
+
+test('copy archive of the latest fixed version from cache', async () => {
+  await grab({ name, repository, version })
+  const { archive: actualArchive, version: actualVersion } = await grab({
+    name, repository, version
+  })
+  ok(await exists(archive), 'archive not found')
+  strictEqual(actualVersion, version)
+  strictEqual(actualArchive, archive)
+})
+
+test('download archive from the latest fixed version without cache', async () => {
+  await grab({ name, repository, version })
+  const { archive: actualArchive, version: actualVersion } = await grab({
+    name, repository, version, cache: false
+  })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
 
 test('download archive from the latest symbolic version with platforms', async () => {
-  const { archive: actualArchive, version: actualVersion } = await grab(
-    { name, repository, version: 'latest', platformSuffixes })
+  const { archive: actualArchive, version: actualVersion } = await grab({
+    name, repository, version: 'latest', platformSuffixes
+  })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
 
 test('download archive from the latest semantic version with architectures', async () => {
-  const { archive: actualArchive, version: actualVersion } = await grab(
-    { name, repository, version: '>=0.0.1', archSuffixes })
+  const { archive: actualArchive, version: actualVersion } = await grab({
+    name, repository, version: '>=0.0.1', archSuffixes
+  })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
 
 test('download archive from a fixed tag', async () => {
-  const { archive: actualArchive, version: actualVersion } = await grab(
-    { name, repository, version: `v${version}` })
+  const { archive: actualArchive, version: actualVersion } = await grab({
+    name, repository, version: `v${version}`
+  })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
 
 test('download archive from an old fixed version', async () => {
-  const { archive: actualArchive, version: actualVersion } = await grab(
-    { name, repository, version: '0.0.5' })
+  const { archive: actualArchive, version: actualVersion } = await grab({
+    name, repository, version: '0.0.5'
+  })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, '0.0.5')
   strictEqual(actualArchive, archive)
 })
 
 test('download archive from the latest fixed version with a guessed name', async () => {
-  const { archive: actualArchive, version: actualVersion } = await grab({ repository, version })
+  const { archive: actualArchive, version: actualVersion } = await grab({
+    repository, version
+  })
   ok(await exists(archive), 'archive not found')
   strictEqual(actualVersion, version)
   strictEqual(actualArchive, archive)
 })
 
 test('download archive from the latest implicit version and unpack executable', async () => {
-  const { executable: actualExecutable, version: actualVersion } = await grab(
-    { name, repository, unpackExecutable: true, verbose: true })
+  const { executable: actualExecutable, version: actualVersion } = await grab({
+    name, repository, unpackExecutable: true, verbose: true
+  })
   ok(!await exists(archive), 'archive found')
   ok(await exists(executable), 'executable not found')
   strictEqual(actualVersion, version)
@@ -125,8 +156,20 @@ test('download archive from the latest implicit version and unpack executable', 
 
 test('download archive from the latest implicit version and unpack executable to a custom directory', async () => {
   await mkdir(targetDirectory, { recursive: true })
-  const { executable: actualExecutable, version: actualVersion } = await grab(
-    { name, repository, targetDirectory, unpackExecutable: true })
+  const { executable: actualExecutable, version: actualVersion } = await grab({
+    name, repository, targetDirectory, unpackExecutable: true
+  })
+  ok(await exists(actualExecutable), 'executable not found')
+  strictEqual(actualVersion, version)
+  ok(actualExecutable.endsWith(executable))
+})
+
+test('copy archive of the latest implicit version from cache and unpack executable to a custom directory', async () => {
+  await mkdir(targetDirectory, { recursive: true })
+  await grab({ name, repository, targetDirectory, unpackExecutable: true })
+  const { executable: actualExecutable, version: actualVersion } = await grab({
+    name, repository, targetDirectory, unpackExecutable: true
+  })
   ok(await exists(actualExecutable), 'executable not found')
   strictEqual(actualVersion, version)
   ok(actualExecutable.endsWith(executable))

@@ -1,13 +1,25 @@
 import debug from 'debug'
-import { createWriteStream, promises } from 'fs'
-import { join } from 'path'
+import { constants, createWriteStream, promises } from 'fs'
+import { homedir } from 'os'
+import { join, parse } from 'path'
 import { clean, satisfies, valid } from 'semver'
 import { Readable } from 'stream'
 import { open as openArchive } from 'yauzl'
 
 let log = debug('grabghr')
-const { chmod, unlink } = promises
+const { access, chmod, copyFile, mkdir, rename, unlink } = promises
 const { arch, platform } = process
+
+async function exists(file) {
+  try {
+    await access(file, constants.R_OK)
+    return true
+  } catch (err) {
+    /* c8 ignore next */
+    if (err.code !== 'ENOENT') throw err
+    return false
+  }
+}
 
 /* c8 ignore next 6 */
 function delay(seconds) {
@@ -47,12 +59,8 @@ function fetchSafely(url, token, options = {}) {
        ...options
     }
     const res = await fetch(url, options)
-    /* c8 ignore next 29 */
+    /* c8 ignore next 38 */
     if (!res.ok) {
-      try {
-        const response = await res.text()
-        log('%s', response)
-      } catch {}
       if (res.status === 403 || res.status === 429) {
         const {
           'retry-after': after,
@@ -63,14 +71,27 @@ function fetchSafely(url, token, options = {}) {
           'x-ratelimit-resource': resource
         } = res.headers
         log('Retry first after: %s', after)
-        log('The maximum number of requests that you can make per hour%s', limit)
-        log('The number of requests remaining in the current rate limit window%s', remaining)
-        log('The number of requests you have made in the current rate limit window%s', used)
-        log('The time at which the current rate limit window resets, in UTC epoch seconds%s', reset)
-        log('The rate limit resource that the request counted against%s', resource)
-        const wait = after || reset
+        log('The maximum number of requests that you can make per hour: %s', limit)
+        log('The number of requests remaining in the current rate limit window: %s', remaining)
+        log('The number of requests you have made in the current rate limit window: %s', used)
+        log('The time at which the current rate limit window resets, in UTC epoch seconds: %s', reset)
+        log('The rate limit resource that the request counted against: %s', resource)
+        try {
+          const response = await res.text()
+          log('%s', response)
+        } catch {
+          // ignore invalid respose
+        }
+          const wait = after || reset
         if (wait) {
           await delay(wait)
+        }
+      } else {
+        try {
+          const response = await res.text()
+          log('%s', response)
+        } catch {
+          // ignore invalid respose
         }
       }
       const err = new Error(`GET "${url}" failed: ${res.status} ${res.statusText}`)
@@ -138,8 +159,40 @@ async function getRelease(name, repo, verspec, platformSuffixes, archSuffixes, t
   throw new Error(`version matching "${verspec}" not found`)
 }
 
+function getCachePath(cacheDir, version, archive) {
+  const { ext, name } = parse(archive);
+  return join(cacheDir, `${name}_${version}${ext}`)
+}
+
+async function checkCache(name, version, archive) {
+  const cacheDir = join(homedir(), '.cache/grabghr', name)
+  const cachePath = getCachePath(cacheDir, version, archive)
+  log('check "%s"', cachePath)
+  const hasCache = await exists(cachePath)
+  return { hasCache, cacheDir, cachePath }
+}
+
+async function storeCache(cacheDir, cachePath, archivePath, copy) {
+  log('ensure "%s"', cacheDir)
+  await mkdir(cacheDir, { recursive: true })
+  if (copy) {
+    log('copy "%s" to "%s"', archivePath, cachePath)
+    await copyFile(archivePath, cachePath)
+  } else {
+    try {
+      log('rename "%s" to "%s"', archivePath, cachePath)
+      await rename(archivePath, cachePath)
+    /* c8 ignore next 6 */
+    } catch {
+      log('copy "%s" to "%s"', archivePath, cachePath)
+      await copyFile(archivePath, cachePath)
+      log('remove "%s"', archivePath)
+      await unlink(archivePath)
+    }
+  }
+}
+
 async function download(url, archive, token) {
-  log('download "%s"', url)
   const res = await fetchSafely(url, token)
   await new Promise((resolve, reject) => {
     const stream = Readable.fromWeb(res.body)
@@ -149,6 +202,33 @@ async function download(url, archive, token) {
       .on('finish', () => resolve())
       .on('error', reject)
   })
+}
+
+async function useCacheOrDownload(name, version, url, archive, targetDirectory, temporary, cache, token) {
+  const archivePath = targetDirectory ? join(targetDirectory, archive) : archive
+  if (cache === false) {
+    await download(url, archivePath, token)
+    return { archivePath, fromCache: false }
+  }
+  const { hasCache, cacheDir, cachePath } = await checkCache(name, version, archive)
+  if (hasCache && targetDirectory) {
+    log('copy "%s" to "%s"', cachePath, archivePath)
+    await copyFile(cachePath, archivePath)
+    return { archivePath, fromCache: false }
+  }
+  if (!hasCache) {
+    await download(url, archivePath, token)
+    const copy = !temporary || !!targetDirectory
+    await storeCache(cacheDir, cachePath, archivePath, copy)
+    if (copy) {
+      return { archivePath, fromCache: false }
+    }
+  } else if (!temporary) {
+    log('copy "%s" to "%s"', cachePath, archivePath)
+    await copyFile(cachePath, archivePath)
+    return { archivePath, fromCache: false }
+  }
+  return { archivePath: cachePath, fromCache: true }
 }
 
 function unpack(archive, targetDirectory) {
@@ -188,20 +268,21 @@ async function makeExecutable(executable) {
   }
 }
 
-export default async function grab({ name, repository, version, platformSuffixes, archSuffixes, targetDirectory, unpackExecutable, token, verbose }) {
+export default async function grab({ name, repository, version, platformSuffixes, archSuffixes, targetDirectory, unpackExecutable, cache, token, verbose }) {
   if (verbose) log = console.log.bind(console)
   if (!version) version = 'latest'
   const verspec = clean(version) || version
   let archive, url;
   ({ name, version, archive, url } = await getRelease(name, repository, verspec, platformSuffixes, archSuffixes, token))
-  if (targetDirectory) archive = join(targetDirectory, archive)
-  await download(url, archive, token)
+  const { archivePath, fromCache } = await useCacheOrDownload(name, version, url, archive, targetDirectory, unpackExecutable, cache, token)
   if (unpackExecutable) {
-    const executable = await unpack(archive, targetDirectory)
+    const executable = await unpack(archivePath, targetDirectory)
     await makeExecutable(executable)
-    log('remove "%s"', archive)
-    await unlink(archive)
+    if (!fromCache) {
+      log('remove "%s"', archivePath)
+      await unlink(archivePath)
+    }
     return { executable, version }
   }
-  return { archive, version }
+  return { archive: archivePath, version }
 }

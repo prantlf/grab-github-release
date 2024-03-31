@@ -40,6 +40,11 @@ interface GrabOptions {
    * unpack the executable and remove the archive
    */
   unpackExecutable?: boolean
+  /**
+   * store the downloaded archives from GitHub releases to the cache
+   * in ~/.cache/grabghr; `true` is the default
+   */
+  cache?: boolean
 }
 
 interface GrabResult {

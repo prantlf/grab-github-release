@@ -1,6 +1,8 @@
 import { strictEqual } from 'assert'
 import { access, rm } from 'fs/promises'
 import { after, before, test } from 'node:test'
+import { homedir } from 'os'
+import { join } from 'path'
 import grab from 'grab-github-release'
 
 const exists = file => access(file).then(() => true, () => false)
@@ -15,9 +17,13 @@ const platformSuffixes = {
   win32: 'windows'
 }
 const archive = `${name}-${platformSuffixes[platform]}-${arch}.zip`
+const cacheDir = join(homedir(), '.cache/grabghr/', name)
 
 function cleanup() {
-  return rm(archive, { force: true })
+  return Promise.all([
+    rm(archive, { force: true }),
+    rm(cacheDir, { recursive: true, force: true })
+  ])
 }
 
 before(cleanup)
