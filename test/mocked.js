@@ -4,7 +4,7 @@ import { after, before, beforeEach, test, mock } from 'node:test'
 import { homedir } from 'os'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
-import grab from 'grab-github-release'
+import { grab, clearCache } from 'grab-github-release'
 import releases from './data/releases.json' assert { type: 'json' }
 
 const exists = file => access(file).then(() => true, () => false)
@@ -30,7 +30,8 @@ const content = new Blob(
   { type: 'application.zip' }
 )
 const targetDirectory = join(__dirname, 'tmp')
-const cacheDirectory = join(homedir(), '.cache/grabghr/', name)
+const wholeCacheDirectory = join(homedir(), '.cache/grabghr')
+const cacheDirectory = join(wholeCacheDirectory, name)
 
 async function cleanup() {
   // failed on Windows on GitHub
@@ -173,4 +174,19 @@ test('copy archive of the latest implicit version from cache and unpack executab
   ok(await exists(actualExecutable), 'executable not found')
   strictEqual(actualVersion, version)
   ok(actualExecutable.endsWith(executable))
+})
+
+test('clear cache for a name', async () => {
+  await grab({ repository, version })
+  ok(await exists(cacheDirectory), 'cache not found')
+  await clearCache({ name, verbose: true })
+  ok(!await exists(cacheDirectory), 'cache found')
+  ok(await exists(wholeCacheDirectory), 'whole cache not found')
+})
+
+test('clear the whole cache', async () => {
+  await grab({ repository, version })
+  ok(await exists(cacheDirectory), 'cache not found')
+  await clearCache()
+  ok(!await exists(wholeCacheDirectory), 'whole cache found')
 })

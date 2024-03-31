@@ -1,4 +1,4 @@
-import grab from 'grab-github-release'
+import { grab, clearCache } from 'grab-github-release'
 
 declare type testCallback = () => void
 declare function test (label: string, callback: testCallback)
@@ -22,6 +22,16 @@ test('Type declarations for TypeScript', () => {
       x64: ['']
     },
     targetDirectory: '',
-    unpackExecutable: true
+    unpackExecutable: true,
+    cache: true,
+    token: '',
+    verbose: true
+  })
+
+  clearCache()
+
+  clearCache({
+    name: '',
+    verbose: true
   })
 })

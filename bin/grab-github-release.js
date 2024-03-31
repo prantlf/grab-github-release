@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import grab from '../dist/index.mjs'
+import { grab, clearCache as clear } from '../dist/index.mjs'
 
 function help() {
   console.log(`Generates a unique build number with a human-readable build time.
@@ -8,6 +8,7 @@ function help() {
 Usage: [options]
 
 Options:
+  --clear-cache                 clears the cache, optionally for a "name"
   -r|--repository <repository>  GitHub repository formatted "owner/name"
   -i|--version-spec <semver>    semantic version specifier or "latest"
   -n|--name <file-name>         archive name without the platform suffix
@@ -37,7 +38,7 @@ function fail(message) {
 }
 
 const { argv } = process
-let   repository, version, name, platformSuffixes, archSuffixes,
+let   clearCache, repository, version, name, platformSuffixes, archSuffixes,
       targetDirectory, unpackExecutable, cache, token, verbose
 
 for (let i = 2, l = argv.length; i < l; ++i) {
@@ -47,6 +48,9 @@ for (let i = 2, l = argv.length; i < l; ++i) {
     const parseArg = async (arg, flag) => {
       let entries
       switch (arg) {
+        case 'clear-cache':
+          clearCache = flag
+          return
         case 'r': case 'repository':
           repository = match[4] || argv[++i]
           return
@@ -116,26 +120,35 @@ for (let i = 2, l = argv.length; i < l; ++i) {
   fail(`unrecognized argument: "${arg}"`)
 }
 
-if (!repository) {
-  if (argv.length > 2) fail('missing repository')
-  help()
-  process.exit(0)
-}
+if (clearCache) {
+  try {
+    await clear({ name, verbose })
+  } catch(err) {
+    console.error(err.message)
+    process.exitCode = 1
+  }
+} else {
+  if (!repository) {
+    if (argv.length > 2) fail('missing repository')
+    help()
+    process.exit(0)
+  }
 
-try {
-  await grab({
-    repository,
-    version,
-    name,
-    platformSuffixes,
-    archSuffixes,
-    targetDirectory,
-    unpackExecutable,
-    cache,
-    token,
-    verbose
-  })
-} catch(err) {
-  console.error(err.message)
-  process.exitCode = 1
+  try {
+    await grab({
+      repository,
+      version,
+      name,
+      platformSuffixes,
+      archSuffixes,
+      targetDirectory,
+      unpackExecutable,
+      cache,
+      token,
+      verbose
+    })
+  } catch(err) {
+    console.error(err.message)
+    process.exitCode = 1
+  }
 }

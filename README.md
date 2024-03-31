@@ -12,7 +12,7 @@ If used to install a binary executable to a NPM package, [link-bin-executable] c
 ## Synopsis
 
 ```js
-import grab from 'grab-github-release'
+import { grab } from 'grab-github-release'
 
 try {
   const repository = 'prantlf/v-jsonlint'
@@ -57,6 +57,7 @@ Make sure, that you use [Node.js] version 18 or newer.
     Usage: [options]
 
     Options:
+      --clear-cache                 clears the cache, optionally for a "name"
       -r|--repository <repository>  GitHub repository formatted "owner/name"
       -i|--version-spec <semver>    semantic version specifier or "latest"
       -n|--name <file-name>         archive name without the platform suffix
@@ -108,6 +109,14 @@ interface GrabOptions {
   targetDirectory?: string
   // unpack the executable and remove the archive
   unpackExecutable?: boolean
+  // store the downloaded archives from GitHub releases to the cache
+  // in ~/.cache/grabghr; `true` is the default
+  cache?: boolean
+  // GitHub authentication token, overrides the environment variables
+  // GITHUB_TOKEN or GH_TOKEN
+  token?: string
+  // print details about the program execution
+  verbose?: boolean
 }
 
 interface GrabResult {
@@ -119,9 +128,20 @@ interface GrabResult {
   executable?: string
 }
 
+interface ClearCacheOptions {
+  // archive name without the platform and architecture suffix
+  // and without the ".zip" extension as well, used as a cache directory name
+  name?: string
+  // print details about the program execution
+  verbose?: boolean
+}
+
 // downloads and optionally unpacks an archive from GitHub release assets
 // for the current platform
-export default function grab(options: GrabOptions): GrabResult
+export function grab(options: GrabOptions): Promise<GrabResult>
+
+// clears the cache used for downloading archives from GitHub releases
+export function clearCache(options?: ClearCacheOptions): Promise<void>
 ```
 
 ## Contributing

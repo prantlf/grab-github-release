@@ -3,7 +3,7 @@ import { access, rm } from 'fs/promises'
 import { after, before, test } from 'node:test'
 import { homedir } from 'os'
 import { join } from 'path'
-import grab from 'grab-github-release'
+import { grab } from 'grab-github-release'
 
 const exists = file => access(file).then(() => true, () => false)
 const { platform, arch } = process
@@ -17,7 +17,7 @@ const platformSuffixes = {
   win32: 'windows'
 }
 const archive = `${name}-${platformSuffixes[platform]}-${arch}.zip`
-const cacheDir = join(homedir(), '.cache/grabghr/', name)
+const cacheDir = join(homedir(), '.cache/grabghr', name)
 
 function cleanup() {
   return Promise.all([

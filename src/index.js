@@ -7,7 +7,7 @@ import { Readable } from 'stream'
 import { open as openArchive } from 'yauzl'
 
 let log = debug('grabghr')
-const { access, chmod, copyFile, mkdir, rename, unlink } = promises
+const { access, chmod, copyFile, mkdir, rm, rename, unlink } = promises
 const { arch, platform } = process
 
 async function exists(file) {
@@ -192,6 +192,13 @@ async function storeCache(cacheDir, cachePath, archivePath, copy) {
   }
 }
 
+async function removeCache(name) {
+  const cacheDir = name ? join(homedir(), '.cache/grabghr', name)
+    : join(homedir(), '.cache/grabghr')
+  log('remove "%s"', cacheDir)
+  await rm(cacheDir, { recursive: true, force: true })
+}
+
 async function download(url, archive, token) {
   const res = await fetchSafely(url, token)
   await new Promise((resolve, reject) => {
@@ -268,7 +275,7 @@ async function makeExecutable(executable) {
   }
 }
 
-export default async function grab({ name, repository, version, platformSuffixes, archSuffixes, targetDirectory, unpackExecutable, cache, token, verbose }) {
+export async function grab({ name, repository, version, platformSuffixes, archSuffixes, targetDirectory, unpackExecutable, cache, token, verbose }) {
   if (verbose) log = console.log.bind(console)
   if (!version) version = 'latest'
   const verspec = clean(version) || version
@@ -285,4 +292,9 @@ export default async function grab({ name, repository, version, platformSuffixes
     return { executable, version }
   }
   return { archive: archivePath, version }
+}
+
+export async function clearCache({ name, verbose } = {}) {
+  if (verbose) log = console.log.bind(console)
+  await removeCache(name)
 }

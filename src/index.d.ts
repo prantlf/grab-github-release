@@ -45,6 +45,15 @@ interface GrabOptions {
    * in ~/.cache/grabghr; `true` is the default
    */
   cache?: boolean
+  /**
+   * GitHub authentication token, overrides the environment variables
+   * GITHUB_TOKEN or GH_TOKEN
+   */
+  token?: string
+  /**
+   * print details about the program execution
+   */
+  verbose?: boolean
 }
 
 interface GrabResult {
@@ -62,10 +71,29 @@ interface GrabResult {
   executable?: string
 }
 
+interface ClearCacheOptions {
+  /**
+   * archive name without the platform and architecture suffix
+   * and without the ".zip" extension as well, used as a cache directory name
+   */
+  name?: string
+  /**
+   * print details about the program execution
+   */
+  verbose?: boolean
+}
+
 /**
  * downloads and optionally unpacks an archive from GitHub release assets
  * for the current platform
  * 
  * @param options see properties of `GrabOptions` for more information
  */
-export default function grab(options: GrabOptions): GrabResult
+export function grab(options: GrabOptions): Promise<GrabResult>
+
+/**
+ * clears the cache used for downloading archives from GitHub releases
+ * 
+ * @param options see properties of `ClearCacheOptions` for more information
+ */
+export function clearCache(options?: ClearCacheOptions): Promise<void>

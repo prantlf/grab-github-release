@@ -1,4 +1,7 @@
 const { ok } = require('assert')
-const grab = require('../dist/index.cjs')
+const exported = require('../dist/index.cjs')
 
-ok(typeof grab === 'function')
+ok(exported)
+ok(typeof exported === 'object')
+ok(typeof exported.grab === 'function')
+ok(typeof exported.clearCache === 'function')
