@@ -31,8 +31,8 @@ The archive with the executable is expected to be:
 where:
 
 * `{name}` is the name of the tool (executable)
-* `{platform}` is the name of the target platform, by default: `linux`, `macos` or `windows`
-* `{architecture}` is the name of the targetarchitecture, by default `aarch64` or `arm64` (64-bit ARM), `amd64`, `x86_64`, `x64` or `x86` (64-bit AMD)
+* `{platform}` is the name of the target platform, by default: `linux`, `darwin` (also `macos`) and `win32` (also `windows`)
+* `{architecture}` is the name of the target architecture, by default `arm64` (also `aarch64`) and `x64` (also `amd64`, `x86_64` or `x86`)
 
 ## Installation
 
