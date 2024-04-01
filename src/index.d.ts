@@ -46,6 +46,11 @@ interface GrabOptions {
    */
   cache?: boolean
   /**
+   * force using the cache for getting the last available version and avoid
+   * connecting to GitHub if the cache isn't empty
+   */
+  forceCache?: boolean
+  /**
    * GitHub authentication token, overrides the environment variables
    * GITHUB_TOKEN or GH_TOKEN
    */

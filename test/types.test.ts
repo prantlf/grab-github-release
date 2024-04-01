@@ -24,6 +24,7 @@ test('Type declarations for TypeScript', () => {
     targetDirectory: '',
     unpackExecutable: true,
     cache: true,
+    forceCache: true,
     token: '',
     verbose: true
   })

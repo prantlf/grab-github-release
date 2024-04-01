@@ -17,6 +17,7 @@ Options:
   -t|--target-dir <dir-name>    directory to write the output files to
   -e|--unpack-exe               unpack the executable and remove the archive
   -c|--cache                    use ~/.cache/grabghr as cache
+  --force-cache                 use the cache to discover the latest version
   -g|--gh-token <token>         GitHub authentication token
   -v|--verbose                  prints extra information on the console
   -V|--version                  print version number and exit
@@ -39,7 +40,7 @@ function fail(message) {
 
 const { argv } = process
 let   clearCache, repository, version, name, platformSuffixes, archSuffixes,
-      targetDirectory, unpackExecutable, cache, token, verbose
+      targetDirectory, unpackExecutable, cache, forceCache, token, verbose
 
 for (let i = 2, l = argv.length; i < l; ++i) {
   const arg = argv[i]
@@ -86,6 +87,9 @@ for (let i = 2, l = argv.length; i < l; ++i) {
           return
         case 'c': case 'cache':
           cache = flag
+          return
+        case 'force-cache':
+          forceCache = flag
           return
         case 'g': case 'gh-token':
           token = match[4] || argv[++i]
@@ -144,6 +148,7 @@ if (clearCache) {
       targetDirectory,
       unpackExecutable,
       cache,
+      forceCache,
       token,
       verbose
     })

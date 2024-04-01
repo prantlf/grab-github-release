@@ -7,8 +7,8 @@ import { Readable } from 'stream'
 import { open as openArchive } from 'yauzl'
 
 let log = debug('grabghr')
-const { access, chmod, copyFile, mkdir, rm, rename, unlink } = promises
-const { arch, platform } = process
+const { access, chmod, copyFile, mkdir, rm, readdir, rename, unlink } = promises
+const { arch, env, platform } = process
 
 async function exists(file) {
   try {
@@ -122,7 +122,12 @@ function getArchiveSuffixes(platformSuffixes, archSuffixes) {
   return plats.map(plat => archs.map(arch => `-${plat}-${arch}.zip`)).flat()
 }
 
-async function getRelease(name, repo, verspec, platformSuffixes, archSuffixes, token) {
+function getArchiveInfixes(platformSuffixes, archSuffixes) {
+  const suffixes = getArchiveSuffixes(platformSuffixes, archSuffixes)
+  return suffixes.map(suffix => suffix.slice(0, -4))
+}
+
+async function getGitHubRelease(name, repo, verspec, platformSuffixes, archSuffixes, token) {
   const suffixes = getArchiveSuffixes(platformSuffixes, archSuffixes)
   const archives = name && suffixes.map(suffix => `${name}${suffix}`)
   const url = `https://api.github.com/repos/${repo}/releases`
@@ -159,13 +164,80 @@ async function getRelease(name, repo, verspec, platformSuffixes, archSuffixes, t
   throw new Error(`version matching "${verspec}" not found`)
 }
 
+function parseFileName(archive) {
+  const match = /^(.+)-([^-]+)-([^-]+)_((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[.0-9A-Za-z-]+)?)\.zip$/.exec(archive)
+  if (match) {
+    const [, name, plat, arch, version] = match
+    return { name, version, archive: `${name}-${plat}-${arch}.zip` }
+  }
+}
+
+async function getCachedRelease(name, repo, verspec, platformSuffixes, archSuffixes) {
+  const cacheDir = getCacheDir(repo)
+  if (!await exists(cacheDir)) return {}
+  const infixes = getArchiveInfixes(platformSuffixes, archSuffixes)
+  const archives = name && infixes.map(infix => `${name}${infix}`)
+  const pkgs = []
+  for (const file of await readdir(cacheDir)) {
+    if (archives) {
+      if (archives.includes(file)) {
+        const pkg = parseFileName(file)
+        if (pkg) {
+          if (valid(pkg.version) && (verspec === 'latest' || satisfies(pkg.version, verspec))) {
+            log('match "%s", satisfactory', file)
+            pkgs.push(pkg)
+          } else {
+            log('match "%s", unsatisfactory', file)
+          }
+        } else {
+          log('match "%s", invalid', file)
+        }
+        continue
+      }
+    } else {
+      const infix = infixes.find(infix => file.includes(infix))
+      if (infix) {
+        const pkg = parseFileName(file)
+        if (pkg) {
+          if (valid(pkg.version) && (verspec === 'latest' || satisfies(pkg.version, verspec))) {
+            log('match by infix "%s", satisfactory', file)
+            pkgs.push(pkg)
+          } else {
+            log('match by infix "%s", unsatisfactory', file)
+          }
+        } else {
+          log('match by infix "%s", invalid', file)
+        }
+        continue
+      }
+    }
+    log('skip "%s"', file)
+  }
+  if (pkgs.length) {
+    pkgs.sort((left, right) => compare(left.version, right.version))
+    const [pkg] = pkgs
+    log('pick "%s"', pkg.archive)
+    return pkg
+  }
+  log('nothing picked')
+  return {}
+}
+
+function getCacheRoot() {
+  return join(homedir(), '.cache/grabghr')
+}
+
+function getCacheDir(repo) {
+  return join(getCacheRoot(), repo.replaceAll('/', '_'))
+}
+
 function getCachePath(cacheDir, version, archive) {
   const { ext, name } = parse(archive);
   return join(cacheDir, `${name}_${version}${ext}`)
 }
 
-async function checkCache(name, version, archive) {
-  const cacheDir = join(homedir(), '.cache/grabghr', name)
+async function checkCache(repo, version, archive) {
+  const cacheDir = getCacheDir(repo)
   const cachePath = getCachePath(cacheDir, version, archive)
   log('check "%s"', cachePath)
   const hasCache = await exists(cachePath)
@@ -193,8 +265,10 @@ async function storeCache(cacheDir, cachePath, archivePath, copy) {
 }
 
 async function removeCache(name) {
-  const cacheDir = name ? join(homedir(), '.cache/grabghr', name)
-    : join(homedir(), '.cache/grabghr')
+  let cacheDir = getCacheRoot()
+  if (name) {
+    cacheDir = join(cacheDir, name)
+  }
   log('remove "%s"', cacheDir)
   await rm(cacheDir, { recursive: true, force: true })
 }
@@ -211,13 +285,13 @@ async function download(url, archive, token) {
   })
 }
 
-async function useCacheOrDownload(name, version, url, archive, targetDirectory, temporary, cache, token) {
+async function useCacheOrDownload(repo, version, url, archive, targetDirectory, temporary, cache, token) {
   const archivePath = targetDirectory ? join(targetDirectory, archive) : archive
   if (cache === false) {
     await download(url, archivePath, token)
     return { archivePath, fromCache: false }
   }
-  const { hasCache, cacheDir, cachePath } = await checkCache(name, version, archive)
+  const { hasCache, cacheDir, cachePath } = await checkCache(repo, version, archive)
   if (hasCache && targetDirectory) {
     log('copy "%s" to "%s"', cachePath, archivePath)
     await copyFile(cachePath, archivePath)
@@ -275,13 +349,18 @@ async function makeExecutable(executable) {
   }
 }
 
-export async function grab({ name, repository, version, platformSuffixes, archSuffixes, targetDirectory, unpackExecutable, cache, token, verbose }) {
+export async function grab({ name, repository, version, platformSuffixes, archSuffixes, targetDirectory, unpackExecutable, cache, forceCache, token, verbose }) {
   if (verbose) log = console.log.bind(console)
   if (!version) version = 'latest'
   const verspec = clean(version) || version
-  let archive, url;
-  ({ name, version, archive, url } = await getRelease(name, repository, verspec, platformSuffixes, archSuffixes, token))
-  const { archivePath, fromCache } = await useCacheOrDownload(name, version, url, archive, targetDirectory, unpackExecutable, cache, token)
+  let archive, url
+  if (forceCache || env.GRABGHR_FORCE_CACHE) {
+    ({ name, version, archive } = await getCachedRelease(name, repository, verspec, platformSuffixes, archSuffixes))
+  }
+  if (!archive) {
+    ({ name, version, archive, url } = await getGitHubRelease(name, repository, verspec, platformSuffixes, archSuffixes, token))
+  }
+  const { archivePath, fromCache } = await useCacheOrDownload(repository, version, url, archive, targetDirectory, unpackExecutable, cache, token)
   if (unpackExecutable) {
     const executable = await unpack(archivePath, targetDirectory)
     await makeExecutable(executable)

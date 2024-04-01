@@ -66,6 +66,7 @@ Make sure, that you use [Node.js] version 18 or newer.
       -t|--target-dir <dir-name>    directory to write the output files to
       -e|--unpack-exe               unpack the executable and remove the archive
       -c|--cache                    use ~/.cache/grabghr as cache
+      --force-cache                 use the cache to discover the latest version
       -g|--gh-token <token>         GitHub authentication token
       -v|--verbose                  prints extra information on the console
       -V|--version                  print version number and exit
@@ -112,6 +113,9 @@ interface GrabOptions {
   // store the downloaded archives from GitHub releases to the cache
   // in ~/.cache/grabghr; `true` is the default
   cache?: boolean
+  // force using the cache for getting the last available version and avoid
+  // connecting to GitHub if the cache isn't empty
+  forceCache?: boolean
   // GitHub authentication token, overrides the environment variables
   // GITHUB_TOKEN or GH_TOKEN
   token?: string
