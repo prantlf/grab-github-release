@@ -133,9 +133,8 @@ interface GrabResult {
 }
 
 interface ClearCacheOptions {
-  // archive name without the platform and architecture suffix
-  // and without the ".zip" extension as well, used as a cache directory name
-  name?: string
+  // GitHub repository formatted "owner/name", mandatory
+  repository: string
   // print details about the program execution
   verbose?: boolean
 }

@@ -17,7 +17,7 @@ const platformSuffixes = {
   win32: 'windows'
 }
 const archive = `${name}-${platformSuffixes[platform]}-${arch}.zip`
-const cacheDir = join(homedir(), '.cache/grabghr', name)
+const cacheDir = join(homedir(), '.cache/grabghr', repository.replaceAll('/', '_'))
 
 function cleanup() {
   return Promise.all([

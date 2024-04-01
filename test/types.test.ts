@@ -32,7 +32,7 @@ test('Type declarations for TypeScript', () => {
   clearCache()
 
   clearCache({
-    name: '',
+    repository: '',
     verbose: true
   })
 })

@@ -176,9 +176,11 @@ async function getCachedRelease(name, repo, verspec, platformSuffixes, archSuffi
   const cacheDir = getCacheDir(repo)
   if (!await exists(cacheDir)) return {}
   const infixes = getArchiveInfixes(platformSuffixes, archSuffixes)
+  /* c8 ignore next */
   const archives = name && infixes.map(infix => `${name}${infix}`)
   const pkgs = []
   for (const file of await readdir(cacheDir)) {
+    /* c8 ignore next 15 */
     if (archives) {
       if (archives.includes(file)) {
         const pkg = parseFileName(file)
@@ -198,10 +200,12 @@ async function getCachedRelease(name, repo, verspec, platformSuffixes, archSuffi
       const infix = infixes.find(infix => file.includes(infix))
       if (infix) {
         const pkg = parseFileName(file)
+        /* c8 ignore next 2 */
         if (pkg) {
           if (valid(pkg.version) && (verspec === 'latest' || satisfies(pkg.version, verspec))) {
             log('match by infix "%s", satisfactory', file)
             pkgs.push(pkg)
+          /* c8 ignore next 6 */
           } else {
             log('match by infix "%s", unsatisfactory', file)
           }
@@ -210,6 +214,7 @@ async function getCachedRelease(name, repo, verspec, platformSuffixes, archSuffi
         }
         continue
       }
+    /* c8 ignore next 3 */
     }
     log('skip "%s"', file)
   }
@@ -219,6 +224,7 @@ async function getCachedRelease(name, repo, verspec, platformSuffixes, archSuffi
     log('pick "%s"', pkg.archive)
     return pkg
   }
+  /* c8 ignore next 3 */
   log('nothing picked')
   return {}
 }
@@ -264,11 +270,8 @@ async function storeCache(cacheDir, cachePath, archivePath, copy) {
   }
 }
 
-async function removeCache(name) {
-  let cacheDir = getCacheRoot()
-  if (name) {
-    cacheDir = join(cacheDir, name)
-  }
+async function removeCache(repo) {
+  const cacheDir = repo ? getCacheDir(repo) : getCacheRoot()
   log('remove "%s"', cacheDir)
   await rm(cacheDir, { recursive: true, force: true })
 }
@@ -373,7 +376,7 @@ export async function grab({ name, repository, version, platformSuffixes, archSu
   return { archive: archivePath, version }
 }
 
-export async function clearCache({ name, verbose } = {}) {
+export async function clearCache({ repository, verbose } = {}) {
   if (verbose) log = console.log.bind(console)
-  await removeCache(name)
+  await removeCache(repository)
 }

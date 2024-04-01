@@ -31,7 +31,7 @@ const content = new Blob(
 )
 const targetDirectory = join(__dirname, 'tmp')
 const wholeCacheDirectory = join(homedir(), '.cache/grabghr')
-const cacheDirectory = join(wholeCacheDirectory, name)
+const cacheDirectory = join(wholeCacheDirectory, repository.replaceAll('/', '_'))
 
 async function cleanup() {
   // failed on Windows on GitHub
@@ -179,10 +179,20 @@ if (platform !== 'win32') {
     ok(actualExecutable.endsWith(executable))
   })
 
+  test('copy archive of the latest implicit version forced only from cache', async () => {
+    await grab({ repository, forceCache: true })
+    const { archive: actualArchive, version: actualVersion } = await grab({
+      repository, forceCache: true
+    })
+    ok(await exists(archive), 'archive not found')
+    strictEqual(actualVersion, version)
+    strictEqual(actualArchive, archive)
+  })
+
   test('clear cache for a name', async () => {
     await grab({ repository, version })
     ok(await exists(cacheDirectory), 'cache not found')
-    await clearCache({ name, verbose: true })
+    await clearCache({ repository, verbose: true })
     ok(!await exists(cacheDirectory), 'cache found')
     ok(await exists(wholeCacheDirectory), 'whole cache not found')
   })

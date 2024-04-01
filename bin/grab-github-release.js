@@ -124,21 +124,16 @@ for (let i = 2, l = argv.length; i < l; ++i) {
   fail(`unrecognized argument: "${arg}"`)
 }
 
-if (clearCache) {
-  try {
-    await clear({ name, verbose })
-  } catch(err) {
-    console.error(err.message)
-    process.exitCode = 1
-  }
-} else {
-  if (!repository) {
-    if (argv.length > 2) fail('missing repository')
-    help()
-    process.exit(0)
-  }
+if (!repository) {
+  if (argv.length > 2) fail('missing repository')
+  help()
+  process.exit(0)
+}
 
-  try {
+try {
+  if (clearCache) {
+    await clear({ repository, verbose })
+  } else {
     await grab({
       repository,
       version,
@@ -152,8 +147,8 @@ if (clearCache) {
       token,
       verbose
     })
-  } catch(err) {
-    console.error(err.message)
-    process.exitCode = 1
   }
+} catch(err) {
+  console.error(err.message)
+  process.exitCode = 1
 }
