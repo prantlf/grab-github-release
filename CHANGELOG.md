@@ -1,5 +1,25 @@
 # Changes
 
+## [2.0.0](https://github.com/prantlf/grab-github-release/compare/v1.0.0...v2.0.0) (2024-04-01)
+
+### Features
+
+* Allow forcing only cache to discover the latest version ([6610088](https://github.com/prantlf/grab-github-release/commit/6610088afe04bc1bf0d9a04833cdae34fe449d33))
+* Clear cache by repository path, not by executable name ([c25f03e](https://github.com/prantlf/grab-github-release/commit/c25f03e458703f5761df73290d6a4adad1d9901d))
+
+### BREAKING CHANGES
+
+The mandatory parameter in `options` for `clearCache`
+is `repository` instead of `name`. Directories in the cache are named
+by the relative repository path instead of by the executable name.
+Replace `name` with `repository` in your calls to `clearCache`.
+
+The cache contains directories with relative
+repository paths now. Not executable names any more. This
+invalidates the cache populated so far. You can clear the cache
+by running `grab-github-release --clear-cache` once and start
+populating it again.
+
 ## [1.0.0](https://github.com/prantlf/grab-github-release/compare/v0.2.3...v1.0.0) (2024-03-31)
 
 ### Bug Fixes
