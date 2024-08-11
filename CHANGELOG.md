@@ -1,5 +1,11 @@
 # Changes
 
+## [2.1.0](https://github.com/prantlf/grab-github-release/compare/v2.0.0...v2.1.0) (2024-08-11)
+
+### Features
+
+* Add support for riscv64 architecture ([ccdd729](https://github.com/prantlf/grab-github-release/commit/ccdd72941295dc01932b46ace4ecefd0417b2cd7))
+
 ## [2.0.0](https://github.com/prantlf/grab-github-release/compare/v1.0.0...v2.0.0) (2024-04-01)
 
 ### Features
