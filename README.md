@@ -32,7 +32,7 @@ where:
 
 * `{name}` is the name of the tool (executable)
 * `{platform}` is the name of the target platform, by default: `linux`, `darwin` (also `macos`) and `win32` (also `windows`)
-* `{architecture}` is the name of the target architecture, by default `arm64` (also `aarch64`) and `x64` (also `amd64`, `x86_64` or `x86`)
+* `{architecture}` is the name of the target architecture, by default `arm64` (also `aarch64`), `riscv64` and `x64` (also `amd64`, `x86_64` or `x86`)
 
 ## Installation
 
@@ -103,6 +103,7 @@ interface GrabOptions {
   platformSuffixes?: ArchiveSuffixes
   // recognised architectures organised by the Node.js platform name; defaults:
   // - arm64: aarch64, arm64
+  // - riscv64: riscv64
   // - x64: amd64, x86_64, x64, x86
   archSuffixes?: ArchiveSuffixes
   // directory to write the archive or executable to; if not specified,

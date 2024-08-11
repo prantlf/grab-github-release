@@ -1,4 +1,4 @@
-const { ok } = require('assert')
+const { ok } = require('node:assert')
 const exported = require('../dist/index.cjs')
 
 ok(exported)

@@ -39,8 +39,18 @@ function fail(message) {
 }
 
 const { argv } = process
-let   clearCache, repository, version, name, platformSuffixes, archSuffixes,
-      targetDirectory, unpackExecutable, cache, forceCache, token, verbose
+let   clearCache
+let repository
+let version
+let name
+let platformSuffixes
+let archSuffixes
+let targetDirectory
+let unpackExecutable
+let cache
+let forceCache
+let token
+let verbose
 
 for (let i = 2, l = argv.length; i < l; ++i) {
   const arg = argv[i]
@@ -99,9 +109,9 @@ for (let i = 2, l = argv.length; i < l; ++i) {
           return
         case 'V': case 'version-spec':
           {
-            const { readFile } = await import('fs/promises')
-            const { fileURLToPath } = await import('url')
-            const { join, dirname } = await import('path')
+            const { readFile } = await import('node:fs/promises')
+            const { fileURLToPath } = await import('node:url')
+            const { join, dirname } = await import('node:path')
             const pkg = join(dirname(fileURLToPath(import.meta.url)), '../package.json')
             console.log(JSON.parse(await readFile(pkg, 'utf8')).version)
             process.exit(0)

@@ -28,6 +28,7 @@ interface GrabOptions {
   /**
    * recognised architectures organised by the Node.js platform name; defaults:
    * - arm64: aarch64, arm64
+   * - riscv64: riscv64
    * - x64: amd64, x86_64, x64, x86
    */
   archSuffixes?: ArchiveSuffixes

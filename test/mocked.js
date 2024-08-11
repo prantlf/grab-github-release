@@ -1,9 +1,9 @@
-import { ok, strictEqual } from 'assert'
-import { access, mkdir, readFile, rm } from 'fs/promises'
+import { ok, strictEqual } from 'node:assert'
+import { access, mkdir, readFile, rm } from 'node:fs/promises'
 import { after, before, beforeEach, test, mock } from 'node:test'
-import { homedir } from 'os'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
+import { homedir } from 'node:os'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { grab, clearCache } from 'grab-github-release'
 import releases from './data/releases.json' assert { type: 'json' }
 
@@ -22,6 +22,7 @@ const platformSuffixes = {
 }
 const archSuffixes = {
   arm64: ['arm64'],
+  riscv64: ['riscv64'],
   x64: ['x64', 'x86_64']
 }
 const archive = `${name}-${platformSuffixes[platform][0]}-${archSuffixes[arch][0]}.zip`

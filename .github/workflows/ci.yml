@@ -19,69 +19,55 @@ jobs:
       changed: ${{ steps.bump.outputs.bumped }}
       changed-files: ${{ steps.bump.outputs.changed-files }}
     steps:
-    - name: Checkout Sources
-      uses: actions/checkout@v4
-    - name: Install PNPM
-      uses: pnpm/action-setup@v2
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
       with:
         version: latest
-    - name: Install Node
-      uses: actions/setup-node@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: 'lts/*'
+        registry-url: 'https://registry.npmjs.org'
         cache: 'pnpm'
-    - name: Install Dependencies
-      run: pnpm i --frozen-lockfile --no-verify-store-integrity
-    - name: Build
-      run: npm run build
-    - name: Test
-      run: npm test
+    - run: pnpm i --frozen-lockfile --no-verify-store-integrity
+    - run: npm run build
+    - run: npm test
 
   macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
-    - name: Checkout Sources
-      uses: actions/checkout@v4
-    - name: Install PNPM
-      uses: pnpm/action-setup@v2
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
       with:
         version: latest
-    - name: Install Node
-      uses: actions/setup-node@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: 'lts/*'
+        registry-url: 'https://registry.npmjs.org'
         cache: 'pnpm'
-    - name: Install Dependencies
-      run: pnpm i --frozen-lockfile --no-verify-store-integrity
-    - name: Build
-      run: npm run build
-    - name: Test
-      run: |
+    - run: pnpm i --frozen-lockfile --no-verify-store-integrity
+    - run: npm run build
+    - run: |
         npm run test-cover
         ./test.sh
-    - name: Coverage
-      uses: codecov/codecov-action@v2
+    - uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   windows:
     runs-on: windows-latest
     steps:
-    - name: Checkout Sources
-      uses: actions/checkout@v4
-    - name: Install PNPM
-      uses: pnpm/action-setup@v2
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
       with:
         version: latest
-    - name: Install Node
-      uses: actions/setup-node@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: 'lts/*'
+        registry-url: 'https://registry.npmjs.org'
         cache: 'pnpm'
-    - name: Install Dependencies
-      run: pnpm i --frozen-lockfile --no-verify-store-integrity
-    - name: Build
-      run: npm run build
-    - name: Test
-      run: npm test
+    - run: pnpm i --frozen-lockfile --no-verify-store-integrity
+    - run: npm run build
+    - run: npm test
 
   release:
     if: ${{ github.ref_name == 'master' }}
@@ -91,24 +77,18 @@ jobs:
       - windows
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Sources
-      uses: actions/checkout@v4
-    - name: Install PNPM
-      uses: pnpm/action-setup@v2
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
       with:
         version: latest
-    - name: Install Node
-      uses: actions/setup-node@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: 'lts/*'
-        cache: 'pnpm'
         registry-url: 'https://registry.npmjs.org'
-    - name: Install Dependencies
-      run: pnpm i --frozen-lockfile --no-verify-store-integrity
-    - name: Build
-      run: npm run build
-    - name: Publish Release
-      uses: prantlf/publish-release-action@v1
+        cache: 'pnpm'
+    - run: pnpm i --frozen-lockfile --no-verify-store-integrity
+    - run: npm run build
+    - uses: prantlf/publish-release-action@v1
       with:
         no-archives: true
       env:

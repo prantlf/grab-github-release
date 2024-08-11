@@ -19,6 +19,7 @@ test('Type declarations for TypeScript', () => {
     },
     archSuffixes: {
       arm64: [''],
+      riscv64: [''],
       x64: ['']
     },
     targetDirectory: '',

@@ -1,9 +1,9 @@
 import debug from 'debug'
-import { constants, createWriteStream, promises } from 'fs'
-import { homedir } from 'os'
-import { join, parse } from 'path'
+import { constants, createWriteStream, promises } from 'node:fs'
+import { homedir } from 'node:os'
+import { join, parse } from 'node:path'
 import { clean, satisfies, valid } from 'semver'
-import { Readable } from 'stream'
+import { Readable } from 'node:stream'
 import { open as openArchive } from 'yauzl'
 
 let log = debug('grabghr')
@@ -110,16 +110,17 @@ const defaultPlatformSuffixes = {
 
 const defaultArchSuffixes = {
   arm64: ['aarch64'],
+  riscv64: [],
   x64: ['amd64', 'x86_64', 'x86']
 }
 
 function getArchiveSuffixes(platformSuffixes, archSuffixes) {
   /* c8 ignore next 3 */
-  const plats = platformSuffixes && platformSuffixes[platform] || defaultPlatformSuffixes[platform] || []
+  const plats = platformSuffixes?.[platform] || defaultPlatformSuffixes[platform] || []
   if (!plats.includes(platform)) plats.push(platform)
-  const archs = archSuffixes && archSuffixes[arch] || defaultArchSuffixes[arch] || []
+  const archs = archSuffixes?.[arch] || defaultArchSuffixes[arch] || []
   if (!archs.includes(arch)) archs.push(arch)
-  return plats.map(plat => archs.map(arch => `-${plat}-${arch}.zip`)).flat()
+  return plats.flatMap(plat => archs.map(arch => `-${plat}-${arch}.zip`))
 }
 
 function getArchiveInfixes(platformSuffixes, archSuffixes) {
@@ -157,9 +158,8 @@ async function getGitHubRelease(name, repo, verspec, platformSuffixes, archSuffi
       }
       /* c8 ignore next 7 */
       throw new Error(`no suitable archive found for ${version}`)
-    } else {
-      log('skip "%s" (%s)', version, tag_name)
     }
+      log('skip "%s" (%s)', version, tag_name)
   }
   throw new Error(`version matching "${verspec}" not found`)
 }
@@ -356,7 +356,8 @@ export async function grab({ name, repository, version, platformSuffixes, archSu
   if (verbose) log = console.log.bind(console)
   if (!version) version = 'latest'
   const verspec = clean(version) || version
-  let archive, url
+  let archive
+  let url
   if (forceCache || env.GRABGHR_FORCE_CACHE) {
     ({ name, version, archive } = await getCachedRelease(name, repository, verspec, platformSuffixes, archSuffixes))
   }
